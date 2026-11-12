@@ -247,10 +247,10 @@ button{background:none;border:0;cursor:pointer}
 .rv-box.shake .ob{animation:shake .11s linear infinite}
 .ob{position:relative;perspective:520px}
 .ob .bodyp{position:relative;clip-path:var(--bodyclip)}
-.ob .lidp{position:absolute;inset:0;clip-path:var(--lidclip);transform-origin:var(--hinge);transition:transform 1s cubic-bezier(.25,1.35,.45,1),filter 1s;z-index:2;will-change:transform}
+.ob .lidp{position:absolute;inset:0;clip-path:var(--lidclip);transform-origin:var(--hinge);transform:rotate(var(--ha)) translateY(0) scaleY(1) rotate(calc(var(--ha) * -1));transition:transform 1.1s cubic-bezier(.45,0,.2,1),filter 1.15s,z-index 0s .3s;z-index:2;will-change:transform;backface-visibility:visible}
 .ob .hole{position:absolute;inset:0;z-index:1;width:100%;height:100%;opacity:0;transition:opacity .35s}
 .rv-box.lidopen .hole{opacity:1}
-.rv-box.lidopen .lidp{transform:translateY(-34%) rotateX(52deg) rotateZ(-4deg);filter:brightness(.8) drop-shadow(0 -6px 18px var(--rc))}
+.rv-box.lidopen .lidp{transform:rotate(var(--ha)) translateY(var(--lt)) scaleY(var(--open,-1.25)) rotate(calc(var(--ha) * -1));filter:brightness(.85) drop-shadow(0 -4px 16px var(--rc));z-index:0}
 .ob .holeglow{animation:hg 1.6s ease-in-out infinite}
 @keyframes hg{0%,100%{opacity:.85}50%{opacity:1}}
 .rv-box.charge .ledglow{animation:charge 1.4s ease-in forwards}
@@ -643,12 +643,12 @@ function draw(b){let r=Math.random()*100,t='common';for(const k of ['grail','leg
  const pool=b.items.filter(i=>i.tier===t);return pool[Math.floor(Math.random()*pool.length)]}
 let lastWin=null,RV=null;
 // lid seam per box render (percent of image): left corner, front corner, right corner, edge; back corner of the opening
-const GEO={std:{seam:[[0,24.6],[26.2,44.9],[95.7,37.7],[100,37.4]],back:[69.5,17.4],hinge:'62% 16%'},
- crown:{seam:[[0,24.9],[26.3,43.8],[99.4,37.3],[100,37.2]],back:[73.2,18.4],hinge:'64% 17%'}};
+const GEO={std:{seam:[[0,24.6],[26.2,44.9],[95.7,37.7],[100,37.4]],back:[69.5,17.4],hinge:'40% 4%',ha:-4.7,lt:'16.5%'},
+ crown:{seam:[[0,24.9],[26.3,43.8],[99.4,37.3],[100,37.2]],back:[73.2,18.4],hinge:'40% 5.5%',ha:-4.1,lt:'15.8%'}};
 function OBOX(b){const G=GEO[b.key==='icy'?'crown':'std'],sm=G.seam,pt=p=>`${p[0]}% ${p[1]}%`;
  const lid=`polygon(0 0,100% 0,${[...sm].reverse().map(p=>pt([p[0],p[1]+.6])).join(',')})`,body=`polygon(${sm.map(pt).join(',')},100% 100%,0 100%)`;
  const q=[sm[0],sm[1],sm[2],G.back],hx=q.reduce((a,p)=>a+p[0],0)/4,hy=q.reduce((a,p)=>a+p[1],0)/4;
- const html=`<div class="ob" style="--lidclip:${lid};--bodyclip:${body};--hinge:${G.hinge}">
+ const html=`<div class="ob" style="--lidclip:${lid};--bodyclip:${body};--hinge:${G.hinge};--ha:${G.ha}deg;--lt:${G.lt}">
   <div class="bodyp">${LBOX(b)}</div>
   <svg class="hole" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs>
    <radialGradient id="hg${b.key}" cx="${hx}%" cy="${hy}%" r="40%" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="${b.accent}"/><stop offset="1" stop-color="#140c06"/></radialGradient></defs>
