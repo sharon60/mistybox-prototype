@@ -280,6 +280,7 @@ canvas.glowl{-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparen
 @keyframes charge{from{opacity:.4;filter:blur(7px) brightness(1.5)}to{opacity:1;filter:blur(12px) brightness(4)}}
 .rv-beam{position:absolute;left:50%;width:150px;height:430px;transform:translate(-50%,-100%) scaleY(0);transform-origin:50% 100%;background:linear-gradient(0deg,color-mix(in srgb,var(--rc) 70%,#fff) 0%,color-mix(in srgb,var(--rc) 35%,transparent) 35%,transparent 100%);opacity:0;z-index:2;pointer-events:none}
 .rv-beam.on{animation:beam 2.4s cubic-bezier(.2,.8,.2,1) forwards}
+.rv-on .rv-beam{display:none}   /* the 3D box lights itself; the flat beam read as a rectangle behind it */
 @keyframes beam{0%{opacity:0;transform:translate(-50%,-100%) scaleY(.1)}15%{opacity:1;transform:translate(-50%,-100%) scaleY(1)}100%{opacity:0;transform:translate(-50%,-100%) scaleY(1.1) scaleX(1.6)}}
 .rv-smoke{position:absolute;left:50%;width:0;height:0;z-index:4;pointer-events:none}
 .rv-smoke i{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px;border-radius:50%;background:radial-gradient(closest-side,rgba(220,220,230,.22),transparent);opacity:0}
