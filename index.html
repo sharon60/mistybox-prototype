@@ -775,7 +775,7 @@ function OBOX(b){const G=GEO[b.key==='icy'?'crown':'std'],sm=G.seam,pt=p=>`${p[0
 function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();paintBal();
  const win=draw(b);lastWin={id:win.id,box:bi};
  const rv=$('#reveal'),W=scr.clientWidth,H=scr.clientHeight,cx=W/2,boxY=H*.54,ringY=boxY-24,R=Math.min(170,W*.43),O=4;
- const OB=OBOX(b),BW=190,BH=BW*(760/900),hX=cx-BW/2+BW*OB.hx/100,hY=boxY-BH/2+BH*OB.hy/100;
+ const OB=OBOX(b),RA=(window.MB3D&&window.MB3D.anchor)?window.MB3D.anchor():null,BW=190,BH=BW*(760/900),hX=cx-BW/2+BW*(RA?RA.hx:OB.hx)/100,hY=boxY-BH/2+BH*(RA?RA.hy:OB.hy)/100;
  rv.style.setProperty('--rc',b.accent);
  // pick 10 cards: the winner + 9 others from this box
  const others=b.items.filter(i=>i.id!==win.id).sort(()=>Math.random()-.5).slice(0,9);
@@ -1107,8 +1107,20 @@ function frame(){ requestAnimationFrame(frame);
 
 // ---- 3D box for the opening sequence. Same camera as the Blender image renders (CamAgent + app crop), so the
 // card emitter / beam positions computed from the image (OB.hx, OB.hy) land on the real opening.
+// Front-on camera for the opening. The canvas spans 130% x 180% of the box image area (.ob), padded above for the lid.
+const OBA = 1.3 / (1.8 * 760 / 900);   // canvas aspect
+function frontCam(){
+  const el = 12 * Math.PI / 180, d = 6.2, half = 1.2 / d;            // box (~1.85 wide) spans ~77% of the canvas width
+  const C = new THREE.PerspectiveCamera(2 * Math.atan(half / OBA) * 180 / Math.PI, OBA, .1, 60);
+  C.position.set(0, .6 + Math.sin(el) * d, Math.cos(el) * d); C.lookAt(0, .6, 0);
+  const Hc = 1000 / OBA; C.setViewOffset(1000, Hc, 0, -.165 * Hc, 1000, Hc); C.updateProjectionMatrix(); C.updateMatrixWorld();
+  return C }
+window.MB3D = window.MB3D || {};
+window.MB3D.anchor = () => {   // where the box opening lands, in % of the box image area (what openBox uses for beam/cards)
+  const C = frontCam(), v = new THREE.Vector3(0, 1.12, 0).project(C), fx = v.x * .5 + .5, fy = -v.y * .5 + .5;
+  return {hx: (fx * 1.3 - .15) * 100, hy: (fy * 1.8 - .7) * 100} };
 const BL = {az: -27, el: 24, d: 7.5, tz: .555, lens: 111.98, fw: 1523, fh: 1206, shx: -.0029, shy: .0006, crop: [100, 52, 1418, 1165], zfix: -.019};
-window.MB3D = { reveal(boxEl, b){
+window.MB3D.reveal = function(boxEl, b){
   const ob = boxEl.querySelector('.ob'); if(!ob) return;
   const k = keyOf(b), accent = new THREE.Color(b.accent || '#ffffff');
   load(k).then(src => {
@@ -1127,18 +1139,9 @@ window.MB3D = { reveal(boxEl, b){
     const hingeN = holder.getObjectByName('LidHinge');
     // glow inside the box (seen once the lid lifts) + light spilling from the opening
     const box3 = new THREE.Box3().setFromObject(holder), sz = box3.getSize(new THREE.Vector3()), ctr = box3.getCenter(new THREE.Vector3());
-    const inner = new THREE.Mesh(new THREE.PlaneGeometry(sz.x * .78, sz.z * .7), new THREE.MeshBasicMaterial({color: accent, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false}));
-    inner.userData.glowKeep = true; inner.rotation.x = -Math.PI / 2; inner.position.set(ctr.x, box3.min.y + sz.y * .66, ctr.z); S2.add(inner);
-    const spill = new THREE.PointLight(accent, 0, 3, 1.6); spill.position.set(ctr.x, box3.min.y + sz.y * .9, ctr.z); S2.add(spill);
-    // camera = Blender CamAgent, cropped like the app image, padded so the opening lid stays in frame
-    const az = BL.az * Math.PI / 180, el = BL.el * Math.PI / 180;
-    const C2 = new THREE.PerspectiveCamera(1, BL.fw / BL.fh, .1, 60);
-    const hf = 2 * Math.atan(18 / BL.lens); C2.fov = 2 * Math.atan(Math.tan(hf / 2) * BL.fh / BL.fw) * 180 / Math.PI;
-    C2.position.set(Math.sin(az) * Math.cos(el) * BL.d, BL.tz + Math.sin(el) * BL.d, Math.cos(az) * Math.cos(el) * BL.d);
-    C2.lookAt(0, BL.tz, 0);
-    const [x0, y0, x1, y1] = BL.crop, cw = x1 - x0, ch = y1 - y0;
-    const X0 = x0 + BL.shx * BL.fw - .15 * cw, Y0 = y0 - BL.shy * BL.fw - .7 * ch;
-    C2.setViewOffset(BL.fw, BL.fh, X0, Y0, cw * 1.3, ch * 1.8); C2.updateProjectionMatrix();
+
+    const spill = new THREE.PointLight(accent, 0, 3, 1.6); spill.position.set(ctr.x, box3.max.y + .5, ctr.z + .15); S2.add(spill);
+    const C2 = frontCam();   // straight-on view of the box (slightly from above so the opening reads)
     const gl2 = glowLayer(cv2);
     const fit = () => { const w = cv2.clientWidth, h = cv2.clientHeight; if(w && h){ R2.setSize(w, h, false); gl2.size(w, h) } };
     fit(); boxEl.classList.add('three');
@@ -1155,14 +1158,13 @@ window.MB3D = { reveal(boxEl, b){
       // LED charge while waiting, burst on open, settle after
       const charge = openAt ? (to < .25 ? 2.2 : 1 + 1.2 * Math.exp(-(to - .25) * 2)) : .55 + .7 * Math.min(1, t / 4) + (Math.random() < .08 ? .5 : 0);
       leds.forEach((m, i) => m.emissiveIntensity = base[i] * charge);
-      inner.material.opacity = openAt ? Math.min(.95, to * 2.2) * (.85 + .15 * Math.sin(now / 90)) : 0;
-      spill.intensity = openAt ? Math.min(7, to * 14) : 0;
+      spill.intensity = openAt ? Math.min(2, to * 5) : 0;
       holder.rotation.y = openAt ? 0 : .05 * Math.sin(t * 1.3);
       R2.render(S2, C2); gl2.render(S2, C2, openAt ? .9 : .6);
     };
     requestAnimationFrame(step);
   }).catch(err => console.warn('3D reveal off:', err));
-} };
+};
 const first = load(keyOf(BOXES[typeof cur !== 'undefined' ? cur : 0])).then(() => { hero.classList.add('has3d'); size(); });
 first.catch(err => { console.warn('3D hero off:', err); cv.remove(); });
 frame();
