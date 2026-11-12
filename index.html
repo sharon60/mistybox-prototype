@@ -278,6 +278,24 @@ button{background:none;border:0;cursor:pointer}
 .card3{position:absolute;left:0;top:0;width:100px;height:140px;margin:-70px 0 0 -50px;will-change:transform;pointer-events:none}
 .card3 canvas{position:absolute;left:-8px;top:-8px;width:116px;height:156px}
 .card3.win{transition:transform 1s cubic-bezier(.2,.85,.2,1)}
+.card3.zoom{transition:transform .75s cubic-bezier(.6,0,.4,1),opacity .55s ease-in;opacity:0}
+.rv-detail{position:absolute;inset:0;z-index:12;display:flex;flex-direction:column;align-items:center;text-align:center;padding:44px 24px 30px;overflow-y:auto;scrollbar-width:none;cursor:default;
+ background:radial-gradient(70% 38% at 50% 26%,color-mix(in srgb,var(--rc) 32%,transparent),transparent 72%),linear-gradient(180deg,#07071a,#030306 70%);opacity:0;transition:opacity .55s ease-out .15s}
+.rv-detail::-webkit-scrollbar{display:none}
+.rv-detail.on{opacity:1}
+.dstage{position:relative;width:100%;display:grid;place-items:center;height:min(330px,40vh);flex:none}
+.dhalo{position:absolute;width:280px;height:280px;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 22px,color-mix(in srgb,var(--rc) 22%,transparent) 22px 23px);opacity:.7;-webkit-mask-image:radial-gradient(closest-side,#000 55%,transparent);mask-image:radial-gradient(closest-side,#000 55%,transparent)}
+.dimg{position:relative;width:min(300px,78%);max-height:100%;object-fit:contain;transition:transform .9s cubic-bezier(.2,.85,.2,1);will-change:transform}
+.dtier{margin-top:8px;font-size:10px;letter-spacing:2.6px;font-weight:700;padding:5px 12px;border-radius:12px;color:#fff;background:color-mix(in srgb,var(--rc) 45%,transparent);border:1px solid var(--rc)}
+.dbrand{font-size:11px;letter-spacing:3px;color:var(--mut);margin-top:12px;font-weight:600}
+.dmodel{font-size:26px;font-weight:600;letter-spacing:-.4px;line-height:1.15;margin-top:4px;text-wrap:balance}
+.dvals{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:16px}
+.dvals div{padding:12px;border-radius:14px;background:#111118;border:1px solid var(--bord)}
+.dvals small{display:block;font-size:9px;letter-spacing:1.8px;color:var(--dim);font-weight:600}
+.dvals b{display:block;font-size:22px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.dvals div:first-child b{color:#fff;text-shadow:0 0 14px color-mix(in srgb,var(--rc) 70%,transparent)}
+.dfrom{font-size:11.5px;color:var(--dim);margin-top:12px}
+.rv-detail .acts{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:18px}
 .rv-info{position:absolute;left:0;right:0;bottom:40px;padding:0 24px;text-align:center;opacity:0;transform:translateY(16px);transition:opacity .6s,transform .6s;z-index:10;cursor:default}
 .rv-info.on{opacity:1;transform:none}
 .rv-info .rt{font-size:11px;letter-spacing:3.4px;font-weight:700;color:var(--rc)}
@@ -776,7 +794,7 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
   for(let k=bolts.length-1;k>=0;k--)if(bolts[k].l<=0)bolts.splice(k,1)}
  function arcs(){if(Math.random()<.35){g.save();g.strokeStyle='#fff';g.shadowColor=b.accent;g.shadowBlur=14*SB;g.lineWidth=1;g.globalAlpha=.8;const a=Math.random()*Math.PI*2,r1=BW*.55,p0=[cx+Math.cos(a)*r1,boxY+Math.sin(a)*BH*.55],a2=a+(Math.random()-.5)*1.2,p1=[cx+Math.cos(a2)*r1*1.15,boxY+Math.sin(a2)*BH*.6];
   g.beginPath();g.moveTo(p0[0],p0[1]);for(let k=1;k<6;k++){const p=k/6;g.lineTo(p0[0]+(p1[0]-p0[0])*p+(Math.random()-.5)*14,p0[1]+(p1[1]-p0[1])*p+(Math.random()-.5)*14)}g.lineTo(p1[0],p1[1]);g.stroke();g.restore()}}
- function frame(now){if(done)return;const t=skip?99:(now-t0)/1000;
+ function frame(now){if(done)return;const t=skip?99:(now-t0)/1000;if(phase>0){const lb=$('#rvLbl');if(lb&&lb.style.opacity!=='0')lb.style.opacity=0}
   g.clearRect(0,0,W,H);gF.clearRect(0,0,W,H);gB.clearRect(0,0,W,H);
   if(phase===0){const left=Math.max(0,O-t);const c=$('#rvCount');if(c)c.textContent=left>0?Math.ceil(left*3/O):'';
    if(t>=nextStrike){strike(false);nextStrike=t+Math.max(.16,.95-t*.22)+Math.random()*.25}if(t>1.8)arcs()}
@@ -815,16 +833,26 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
   we.classList.add('win');rv.style.setProperty('--rc',RC[win.tier]);
   requestAnimationFrame(()=>{we.style.transform=`translate(${cx}px,${H*.36}px) scale(2.3)`});
   const f=$('#flash');setTimeout(()=>{f.classList.remove('go');void f.offsetWidth;f.classList.add('go');SFX.reveal(win.tier);spawn(MOB?40:70,true);try{navigator.vibrate&&navigator.vibrate([20,40,60])}catch(e){}},650);
-  setTimeout(()=>{const info=$('#rvInfo');
-   info.innerHTML=`<div class="rt">${win.tier.toUpperCase()}</div><div class="fv">Fair market value ${money(win.price)} · from ${esc(b.skin)}</div>
+  setTimeout(()=>{
+   // transition: the card zooms through the camera, the watch lands on its own full screen
+   const info=document.createElement('div');info.className='rv-detail';info.style.setProperty('--rc',RC[win.tier]);
+   info.innerHTML=`<div class="dstage"><div class="dhalo"></div><img class="dimg" id="dImg" src="${win.img}" alt="${esc(win.brand)} ${esc(win.model)}"></div>
+    <span class="dtier">${win.tier.toUpperCase()}</span><div class="dbrand">${esc(win.brand).toUpperCase()}</div><h2 class="dmodel">${esc(win.model)}</h2>
+    <div class="dvals"><div><small>MARKET VALUE</small><b>${money(win.price)}</b></div><div><small>SELL-BACK (90%)</small><b>${money(win.price*.9)}</b></div></div>
+    <p class="dfrom">Revealed from ${esc(b.skin)} · ${b.tier} box · authenticated &amp; insured</p>
     <div class="acts"><button class="cta sm" id="rKeep">KEEP IN VAULT</button><div class="two" style="margin:0"><button class="btn" id="rSell">SELL ${money(win.price*.9)}</button><button class="btn" id="rShip">SHIP TO ME</button></div><button class="btn" id="rAgain" style="background:none;border:0;color:var(--mut)">OPEN ANOTHER ${b.tier.toUpperCase()} · ${money(b.price)}</button></div>`;
-   info.classList.add('on');pushTick({who:'You',tier:win.tier,box:b.tier,i:win});
+   rv.appendChild(info);
+   const di=info.querySelector('#dImg'),fr=di.getBoundingClientRect(),sr=rv.getBoundingClientRect(),cw=170,ch=170;
+   const fromX=cx-(fr.left-sr.left+fr.width/2),fromY=(H*.36-59)-(fr.top-sr.top+fr.height/2),k=cw/fr.width;
+   di.style.transition='none';di.style.transform=`translate(${fromX}px,${fromY}px) scale(${k})`;void di.offsetWidth;
+   we.classList.add('zoom');we.style.transform=`translate(${cx}px,${H*.36}px) scale(6)`;requestAnimationFrame(()=>{info.classList.add('on');di.style.transition='';di.style.transform=''});SFX.swish();
+   pushTick({who:'You',tier:win.tier,box:b.tier,i:win});
    const close=st=>{done=true;S.col.unshift({id:win.id,st,trk:st==='shipped'?'UPS · 1Z'+Math.random().toString(36).slice(2,9).toUpperCase():undefined});save();rv.classList.remove('on');rv.innerHTML='';scr.classList.remove('rv-on');renderCol();renderLB()};
    info.querySelector('#rKeep').onclick=()=>{close('vault');toast(`${win.model} is in your vault`)};
    info.querySelector('#rSell').onclick=()=>{S.bal+=win.price*.9;close('sold');paintBal();SFX.coin();toast(`Sold back · ${money(win.price*.9)} added to your wallet`)};
    info.querySelector('#rShip').onclick=()=>{close('vault');openShip(S.col[0])};
    info.querySelector('#rAgain').onclick=()=>{close('vault');setTimeout(()=>openBuy(bi),200)};
-   },1500)}
+   },1700)}
 }
 
 /* ---------- gift ---------- */
