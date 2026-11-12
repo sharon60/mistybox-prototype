@@ -717,14 +717,20 @@ async function cardBitmap(c,CSx){const K=CSx||CS,cv=document.createElement('canv
  const neon=g.createLinearGradient(0,0,CW,0);neon.addColorStop(0,'#ff2fd8');neon.addColorStop(.28,'#5a4dff');neon.addColorStop(.5,'#1fd0ff');neon.addColorStop(.72,'#5a4dff');neon.addColorStop(1,'#ff2fd8');
  // panel
  oct(3,3,CW-6,CH-6,8);g.save();g.clip();
- const bg=g.createRadialGradient(CW/2,CH*.45,6,CW/2,CH*.5,CH*.7);bg.addColorStop(0,'#1636d8');bg.addColorStop(.55,'#0d1d9a');bg.addColorStop(1,'#140a5e');g.fillStyle=bg;g.fillRect(0,0,CW,CH);
- const side=g.createLinearGradient(0,0,CW,0);side.addColorStop(0,'rgba(255,47,216,.28)');side.addColorStop(.18,'rgba(255,47,216,0)');side.addColorStop(.82,'rgba(255,47,216,0)');side.addColorStop(1,'rgba(255,47,216,.28)');g.fillStyle=side;g.fillRect(0,0,CW,CH);
+ const bg=g.createRadialGradient(CW/2,CH*.42,6,CW/2,CH*.5,CH*.75);bg.addColorStop(0,'rgba(40,80,255,.42)');bg.addColorStop(.6,'rgba(25,40,170,.30)');bg.addColorStop(1,'rgba(40,15,120,.40)');g.fillStyle=bg;g.fillRect(0,0,CW,CH);
+ const frost=g.createLinearGradient(0,0,0,CH);frost.addColorStop(0,'rgba(255,255,255,.10)');frost.addColorStop(.5,'rgba(255,255,255,.04)');frost.addColorStop(1,'rgba(255,255,255,.08)');g.fillStyle=frost;g.fillRect(0,0,CW,CH);
+ const side=g.createLinearGradient(0,0,CW,0);side.addColorStop(0,'rgba(255,47,216,.22)');side.addColorStop(.18,'rgba(255,47,216,0)');side.addColorStop(.82,'rgba(255,47,216,0)');side.addColorStop(1,'rgba(255,47,216,.22)');g.fillStyle=side;g.fillRect(0,0,CW,CH);
  // app contour waves instead of the grid (drawn once into the bitmap)
  g.lineWidth=.5;for(let i=0;i<24;i++){const y0=-30+i*8;g.strokeStyle=`rgba(${i%3?'120,170,255':'170,120,255'},${.22+.1*Math.sin(i)})`;g.beginPath();
   for(let x=-4;x<=CW+4;x+=3){let y=y0+x*.18;const dx=x-CW*.5,dy=y-CH*.42;y-=14*Math.exp(-(dx*dx+dy*dy)/(2*30*30));y+=1.6*Math.sin(x*.12+i*.7);x<0?g.moveTo(x,y):g.lineTo(x,y)}g.stroke()}
  const glow=g.createRadialGradient(CW/2,CH*.36,2,CW/2,CH*.36,46);glow.addColorStop(0,'rgba(120,160,255,.55)');glow.addColorStop(1,'rgba(120,160,255,0)');g.fillStyle=glow;g.fillRect(0,0,CW,CH);
  if(im){const k=Math.min(74/im.width,72/im.height),w=im.width*k,h=im.height*k;g.drawImage(im,(CW-w)/2,CH*.06+(72-h)/2,w,h)}
+ // glass: top reflection, diagonal sheen band, soft inner edge light
+ const top=g.createLinearGradient(0,0,0,CH*.32);top.addColorStop(0,'rgba(255,255,255,.30)');top.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=top;g.beginPath();g.moveTo(0,0);g.lineTo(CW,0);g.lineTo(CW,CH*.16);g.quadraticCurveTo(CW*.5,CH*.30,0,CH*.24);g.closePath();g.fill();
+ const sh=g.createLinearGradient(CW*.15,0,CW*.75,CH);sh.addColorStop(.30,'rgba(255,255,255,0)');sh.addColorStop(.40,'rgba(255,255,255,.16)');sh.addColorStop(.46,'rgba(255,255,255,.05)');sh.addColorStop(.52,'rgba(255,255,255,.12)');sh.addColorStop(.60,'rgba(255,255,255,0)');g.fillStyle=sh;g.fillRect(0,0,CW,CH);
+ const bot=g.createLinearGradient(0,CH*.75,0,CH);bot.addColorStop(0,'rgba(120,200,255,0)');bot.addColorStop(1,'rgba(120,200,255,.16)');g.fillStyle=bot;g.fillRect(0,CH*.75,CW,CH*.25);
  g.restore();
+ oct(3.6,3.6,CW-7.2,CH-7.2,8);g.strokeStyle='rgba(255,255,255,.28)';g.lineWidth=.5;g.stroke();
  // double neon frame
  g.save();g.shadowColor='#7a4dff';g.shadowBlur=9;oct(0,0,CW,CH,11);g.strokeStyle=neon;g.lineWidth=2.6;g.stroke();g.restore();
  oct(0,0,CW,CH,11);g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=.6;g.stroke();
