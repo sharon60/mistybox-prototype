@@ -1002,7 +1002,7 @@ try {
 const hero = document.getElementById('hero');
 const cv = document.createElement('canvas'); cv.id = 'hero3d'; cv.setAttribute('aria-hidden', 'true');
 hero.insertBefore(cv, hero.querySelector('.track'));
-const R = new THREE.WebGLRenderer({canvas: cv, antialias: true, alpha: true, premultipliedAlpha: false});
+const R = new THREE.WebGLRenderer({canvas: cv, antialias: true, alpha: true});
 const lowPower = (navigator.hardwareConcurrency || 8) <= 4;
 R.setPixelRatio(Math.min(devicePixelRatio, lowPower ? 1.5 : 2)); R.setClearColor(0x000000, 0);
 R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.2; R.outputColorSpace = THREE.SRGBColorSpace;
@@ -1047,7 +1047,7 @@ const BLACK = new THREE.MeshBasicMaterial({color: 0x000000});
 function glowLayer(baseCanvas){
   const gc = document.createElement('canvas'); gc.className = baseCanvas.className + ' glowl'; gc.id = baseCanvas.id ? baseCanvas.id + 'g' : '';
   gc.setAttribute('aria-hidden', 'true'); baseCanvas.after(gc);
-  const RG = new THREE.WebGLRenderer({canvas: gc, antialias: false, alpha: true, premultipliedAlpha: false});
+  const RG = new THREE.WebGLRenderer({canvas: gc, antialias: false, alpha: true, premultipliedAlpha: true});
   RG.setPixelRatio(Math.min(devicePixelRatio, 1.25)); RG.setClearColor(0x000000, 1); RG.toneMapping = THREE.ACESFilmicToneMapping; RG.outputColorSpace = THREE.SRGBColorSpace;
   let comp = null, sceneRef = null, camRef = null;
   return {
@@ -1059,7 +1059,7 @@ function glowLayer(baseCanvas){
         comp.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .6, .18, .05); comp.addPass(comp.bloom); comp.addPass(new OutputPass());
         // glow -> real transparency: opacity from brightness, so everything outside the light stays see-through
         comp.addPass(new ShaderPass({uniforms: {tDiffuse: {value: null}}, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-          fragmentShader: 'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);float a=clamp(max(c.r,max(c.g,c.b)),0.0,1.0);gl_FragColor=vec4(a>0.002?c.rgb/a:vec3(0.0),a);}'}));
+          fragmentShader: 'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);vec3 rgb=clamp(c.rgb,0.0,1.0);float a=max(rgb.r,max(rgb.g,rgb.b));gl_FragColor=vec4(rgb,a);}'}));
         comp.setSize(gc.clientWidth || 1, gc.clientHeight || 1) }
       comp.bloom.strength = strength == null ? 1.1 : strength;
       const swapped = [], env = scene.environment; scene.environment = null;
@@ -1126,7 +1126,7 @@ window.MB3D.reveal = function(boxEl, b){
   load(k).then(src => {
     if(!boxEl.isConnected) return;
     const cv2 = document.createElement('canvas'); cv2.className = 'rv3d'; ob.appendChild(cv2);
-    const R2 = new THREE.WebGLRenderer({canvas: cv2, antialias: true, alpha: true, premultipliedAlpha: false});
+    const R2 = new THREE.WebGLRenderer({canvas: cv2, antialias: true, alpha: true});
     R2.setPixelRatio(Math.min(devicePixelRatio, lowPower ? 1.5 : 2)); R2.setClearColor(0, 0);
     R2.toneMapping = THREE.ACESFilmicToneMapping; R2.toneMappingExposure = 1.2; R2.outputColorSpace = THREE.SRGBColorSpace;
     const S2 = new THREE.Scene(); S2.environment = S.environment;
