@@ -997,6 +997,7 @@ import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
 try {
 const hero = document.getElementById('hero');
 const cv = document.createElement('canvas'); cv.id = 'hero3d'; cv.setAttribute('aria-hidden', 'true');
@@ -1045,8 +1046,8 @@ function byRule(m){const n=m.name||'',col=(m.color||new THREE.Color(1,1,1)).clon
 const BLACK = new THREE.MeshBasicMaterial({color: 0x000000});
 function glowLayer(baseCanvas){
   const gc = document.createElement('canvas'); gc.className = baseCanvas.className + ' glowl'; gc.id = baseCanvas.id ? baseCanvas.id + 'g' : '';
-  gc.setAttribute('aria-hidden', 'true'); gc.style.mixBlendMode = 'screen'; baseCanvas.after(gc);
-  const RG = new THREE.WebGLRenderer({canvas: gc, antialias: false, alpha: false});
+  gc.setAttribute('aria-hidden', 'true'); baseCanvas.after(gc);
+  const RG = new THREE.WebGLRenderer({canvas: gc, antialias: false, alpha: true, premultipliedAlpha: false});
   RG.setPixelRatio(Math.min(devicePixelRatio, 1.25)); RG.setClearColor(0x000000, 1); RG.toneMapping = THREE.ACESFilmicToneMapping; RG.outputColorSpace = THREE.SRGBColorSpace;
   let comp = null, sceneRef = null, camRef = null;
   return {
@@ -1056,6 +1057,9 @@ function glowLayer(baseCanvas){
       if(!comp || sceneRef !== scene || camRef !== camera){ sceneRef = scene; camRef = camera;
         comp = new EffectComposer(RG); comp.addPass(new RenderPass(scene, camera));
         comp.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .6, .18, .05); comp.addPass(comp.bloom); comp.addPass(new OutputPass());
+        // glow -> real transparency: opacity from brightness, so everything outside the light stays see-through
+        comp.addPass(new ShaderPass({uniforms: {tDiffuse: {value: null}}, vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+          fragmentShader: 'uniform sampler2D tDiffuse;varying vec2 vUv;void main(){vec4 c=texture2D(tDiffuse,vUv);float a=clamp(max(c.r,max(c.g,c.b)),0.0,1.0);gl_FragColor=vec4(a>0.002?c.rgb/a:vec3(0.0),a);}'}));
         comp.setSize(gc.clientWidth || 1, gc.clientHeight || 1) }
       comp.bloom.strength = strength == null ? 1.1 : strength;
       const swapped = [], env = scene.environment; scene.environment = null;
