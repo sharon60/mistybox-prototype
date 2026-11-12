@@ -59,6 +59,8 @@ button{background:none;border:0;cursor:pointer}
 .link{font-size:11px;letter-spacing:1.6px;color:var(--accent);font-weight:500;display:flex;gap:4px;align-items:center}
 
 /* live 3D hero box (replaces the flat image once the model has loaded; the image stays as fallback) */
+#hero3dg{position:absolute;left:50%;top:-14px;width:min(100%,430px);height:300px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .6s}
+.hero.has3d #hero3dg{opacity:1}
 #hero3d{position:absolute;left:50%;top:-14px;width:min(100%,430px);height:300px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .6s}
 .hero.has3d #hero3d{opacity:1}
 .hero.has3d .track{opacity:0;transition:opacity .4s}
@@ -252,6 +254,10 @@ button{background:none;border:0;cursor:pointer}
 .rv-box{position:absolute;left:50%;width:190px;transform:translate(-50%,-50%);z-index:3;transition:transform .9s cubic-bezier(.3,.7,.2,1),opacity .8s,filter .8s}
 .rv-box.shake .ob{animation:shake .11s linear infinite}
 .ob{position:relative;perspective:520px}
+.rv-box.three .ob>.bodyp,.rv-box.three .ob>.lidp,.rv-box.three .ob>.hole{visibility:hidden}
+.ob canvas.rv3d{position:absolute;left:-15%;top:-70%;width:130%;height:180%;pointer-events:none;z-index:3}
+.ob canvas.rv3d.glowl{z-index:4}
+canvas.glowl{-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%);mask-image:radial-gradient(closest-side,#000 62%,transparent 100%)}
 .ob .bodyp{position:relative;clip-path:var(--bodyclip)}
 .ob .lidp{position:absolute;inset:0;clip-path:var(--lidclip);transform-origin:var(--hinge);transform:rotate(var(--ha)) translateY(0) scaleY(1) rotate(calc(var(--ha) * -1));transition:transform 1.1s cubic-bezier(.45,0,.2,1),filter 1.15s,z-index 0s .3s;z-index:2;will-change:transform;backface-visibility:visible}
 .ob .hole{position:absolute;inset:0;z-index:1;width:100%;height:100%;opacity:0;transition:opacity .35s}
@@ -785,6 +791,7 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
  const MOB=matchMedia('(max-width:500px)').matches,dpr=Math.min(MOB?1.5:2,devicePixelRatio||1);
  const mk=id=>{const c=$(id);c.width=W*dpr;c.height=H*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);return x};
  const g=mk('#rvc'),gF=mk('#rvf'),gB=mk('#rvk'),box=$('#rvBox'),SB=MOB?0:1;
+ try{window.MB3D&&window.MB3D.reveal(box,b)}catch(e){console.warn('3D reveal off',e)}
  let BM=null;Promise.all(cards.map(c=>cardBitmap(c,CS,b))).then(r=>BM=r);
  const up=new Array(N).fill(false),last=new Array(N);
  const sparks=[];const spawn=(n,burst)=>{for(let k=0;k<n;k++)sparks.push({x:hX+(Math.random()-.5)*(burst?70:90),y:hY+(Math.random()-.5)*14,vx:(Math.random()-.5)*(burst?3.2:.8),vy:-(Math.random()*(burst?4.5:1.4)+.4),l:1,s:Math.random()*1.8+.6})};
@@ -1035,6 +1042,27 @@ function byRule(m){const n=m.name||'',col=(m.color||new THREE.Color(1,1,1)).clon
     return new THREE.MeshPhysicalMaterial({map:EASTER,metalness:.2,roughness:.3,clearcoat:.4})}
   return null}
 
+const BLACK = new THREE.MeshBasicMaterial({color: 0x000000});
+function glowLayer(baseCanvas){
+  const gc = document.createElement('canvas'); gc.className = baseCanvas.className + ' glowl'; gc.id = baseCanvas.id ? baseCanvas.id + 'g' : '';
+  gc.setAttribute('aria-hidden', 'true'); gc.style.mixBlendMode = 'screen'; baseCanvas.after(gc);
+  const RG = new THREE.WebGLRenderer({canvas: gc, antialias: false, alpha: false});
+  RG.setPixelRatio(Math.min(devicePixelRatio, 1.25)); RG.setClearColor(0x000000, 1); RG.toneMapping = THREE.ACESFilmicToneMapping; RG.outputColorSpace = THREE.SRGBColorSpace;
+  let comp = null, sceneRef = null, camRef = null;
+  return {
+    canvas: gc,
+    size(w, h){ RG.setSize(w, h, false); if(comp) comp.setSize(w, h) },
+    render(scene, camera, strength){
+      if(!comp || sceneRef !== scene || camRef !== camera){ sceneRef = scene; camRef = camera;
+        comp = new EffectComposer(RG); comp.addPass(new RenderPass(scene, camera));
+        comp.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .6, .18, .05); comp.addPass(comp.bloom); comp.addPass(new OutputPass());
+        comp.setSize(gc.clientWidth || 1, gc.clientHeight || 1) }
+      comp.bloom.strength = strength == null ? 1.1 : strength;
+      const swapped = [], env = scene.environment; scene.environment = null;
+      scene.traverse(o => { if(o.isMesh && !(o.material.emissive && o.material.emissiveIntensity > 1) && !o.userData.glowKeep){ swapped.push([o, o.material]); o.material = BLACK } });
+      comp.render();
+      swapped.forEach(([o, m]) => o.material = m); scene.environment = env },
+    dispose(){ RG.dispose(); RG.forceContextLoss(); gc.remove() } } }
 const loader = new GLTFLoader(), cache = {}, models = {};
 function keyOf(b){const m=/3d\/(\w+)-box/.exec(b.img);return m?m[1]:'agent'}
 function load(k){ if(models[k]) return models[k];
@@ -1045,10 +1073,8 @@ function load(k){ if(models[k]) return models[k];
     const box = new THREE.Box3().setFromObject(root); root.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     const holder = new THREE.Group(); holder.add(root); return holder; }) }
 
-const comp = new EffectComposer(R, new THREE.WebGLRenderTarget(1, 1, {type: THREE.HalfFloatType, format: THREE.RGBAFormat}));
-comp.addPass(new RenderPass(S, cam));
-const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .45, .3, 1.7); comp.addPass(bloom); comp.addPass(new OutputPass());
-function size(){ const w = cv.clientWidth, h = cv.clientHeight; if(!w || !h) return; R.setSize(w, h, false); comp.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix() }
+const heroGlow = glowLayer(cv);
+function size(){ const w = cv.clientWidth, h = cv.clientHeight; if(!w || !h) return; R.setSize(w, h, false); heroGlow.size(w, h); cam.aspect = w / h; cam.updateProjectionMatrix() }
 addEventListener('resize', size); size();
 
 let shown = -1, active = null, swapT = 1, swapAt = 0, pending = null, tiltX = 0, tiltY = 0, tx = 0, ty = 0;
@@ -1073,7 +1099,66 @@ function frame(){ requestAnimationFrame(frame);
     active.position.y = .05 * Math.sin(t * 1.35);
     active.scale.setScalar(.55 + .45 * e);
     if(pending){ active.scale.setScalar(1 - .4 * swapT); active.rotation.y -= swapT * 1.2 } }
-  comp.render(); }
+  R.render(S, cam); heroGlow.render(S, cam, .55); }
+
+// ---- 3D box for the opening sequence. Same camera as the Blender image renders (CamAgent + app crop), so the
+// card emitter / beam positions computed from the image (OB.hx, OB.hy) land on the real opening.
+const BL = {az: -27, el: 24, d: 7.5, tz: .555, lens: 111.98, fw: 1523, fh: 1206, shx: -.0029, shy: .0006, crop: [100, 52, 1418, 1165], zfix: -.019};
+window.MB3D = { reveal(boxEl, b){
+  const ob = boxEl.querySelector('.ob'); if(!ob) return;
+  const k = keyOf(b), accent = new THREE.Color(b.accent || '#ffffff');
+  load(k).then(src => {
+    if(!boxEl.isConnected) return;
+    const cv2 = document.createElement('canvas'); cv2.className = 'rv3d'; ob.appendChild(cv2);
+    const R2 = new THREE.WebGLRenderer({canvas: cv2, antialias: true, alpha: true, premultipliedAlpha: false});
+    R2.setPixelRatio(Math.min(devicePixelRatio, lowPower ? 1.5 : 2)); R2.setClearColor(0, 0);
+    R2.toneMapping = THREE.ACESFilmicToneMapping; R2.toneMappingExposure = 1.2; R2.outputColorSpace = THREE.SRGBColorSpace;
+    const S2 = new THREE.Scene(); S2.environment = S.environment;
+    S2.add(key.clone(), rim.clone(), fill.clone());
+    const holder = src.clone(true); holder.position.z += BL.zfix;
+    const leds = [];
+    holder.traverse(o => { if(o.isMesh && o.material.emissive && o.material.emissiveIntensity > 1){ o.material = o.material.clone(); leds.push(o.material) } });
+    const base = leds.map(m => m.emissiveIntensity);
+    S2.add(holder);
+    const hingeN = holder.getObjectByName('LidHinge');
+    // glow inside the box (seen once the lid lifts) + light spilling from the opening
+    const box3 = new THREE.Box3().setFromObject(holder), sz = box3.getSize(new THREE.Vector3()), ctr = box3.getCenter(new THREE.Vector3());
+    const inner = new THREE.Mesh(new THREE.PlaneGeometry(sz.x * .78, sz.z * .7), new THREE.MeshBasicMaterial({color: accent, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false}));
+    inner.userData.glowKeep = true; inner.rotation.x = -Math.PI / 2; inner.position.set(ctr.x, box3.min.y + sz.y * .66, ctr.z); S2.add(inner);
+    const spill = new THREE.PointLight(accent, 0, 3, 1.6); spill.position.set(ctr.x, box3.min.y + sz.y * .9, ctr.z); S2.add(spill);
+    // camera = Blender CamAgent, cropped like the app image, padded so the opening lid stays in frame
+    const az = BL.az * Math.PI / 180, el = BL.el * Math.PI / 180;
+    const C2 = new THREE.PerspectiveCamera(1, BL.fw / BL.fh, .1, 60);
+    const hf = 2 * Math.atan(18 / BL.lens); C2.fov = 2 * Math.atan(Math.tan(hf / 2) * BL.fh / BL.fw) * 180 / Math.PI;
+    C2.position.set(Math.sin(az) * Math.cos(el) * BL.d, BL.tz + Math.sin(el) * BL.d, Math.cos(az) * Math.cos(el) * BL.d);
+    C2.lookAt(0, BL.tz, 0);
+    const [x0, y0, x1, y1] = BL.crop, cw = x1 - x0, ch = y1 - y0;
+    const X0 = x0 + BL.shx * BL.fw - .15 * cw, Y0 = y0 - BL.shy * BL.fw - .7 * ch;
+    C2.setViewOffset(BL.fw, BL.fh, X0, Y0, cw * 1.3, ch * 1.8); C2.updateProjectionMatrix();
+    const gl2 = glowLayer(cv2);
+    const fit = () => { const w = cv2.clientWidth, h = cv2.clientHeight; if(w && h){ R2.setSize(w, h, false); gl2.size(w, h) } };
+    fit(); boxEl.classList.add('three');
+    const t0 = performance.now(); let openAt = 0;
+    const step = now => {
+      if(!cv2.isConnected){ gl2.dispose(); R2.dispose(); R2.forceContextLoss(); return }
+      requestAnimationFrame(step);
+      const t = (now - t0) / 1000, open = boxEl.classList.contains('lidopen');
+      if(open && !openAt) openAt = now;
+      const to = openAt ? (now - openAt) / 1000 : 0;
+      // lid on its back hinge: quick crack, then a heavy swing with a small overshoot
+      const e = openAt ? Math.min(1, to / .95) : 0, ang = openAt ? 108 * (1 - Math.pow(1 - e, 3)) - 6 * Math.sin(Math.min(1, to / 1.4) * Math.PI) * (e >= 1 ? 1 : 0) : 0;
+      if(hingeN) hingeN.rotation.x = -THREE.MathUtils.degToRad(Math.max(0, ang));
+      // LED charge while waiting, burst on open, settle after
+      const charge = openAt ? (to < .25 ? 2.2 : 1 + 1.2 * Math.exp(-(to - .25) * 2)) : .55 + .7 * Math.min(1, t / 4) + (Math.random() < .08 ? .5 : 0);
+      leds.forEach((m, i) => m.emissiveIntensity = base[i] * charge);
+      inner.material.opacity = openAt ? Math.min(.95, to * 2.2) * (.85 + .15 * Math.sin(now / 90)) : 0;
+      spill.intensity = openAt ? Math.min(7, to * 14) : 0;
+      holder.rotation.y = openAt ? 0 : .05 * Math.sin(t * 1.3);
+      R2.render(S2, C2); gl2.render(S2, C2, openAt ? .9 : .6);
+    };
+    requestAnimationFrame(step);
+  }).catch(err => console.warn('3D reveal off:', err));
+} };
 const first = load(keyOf(BOXES[typeof cur !== 'undefined' ? cur : 0])).then(() => { hero.classList.add('has3d'); size(); });
 first.catch(err => { console.warn('3D hero off:', err); cv.remove(); });
 frame();
