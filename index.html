@@ -58,6 +58,10 @@ button{background:none;border:0;cursor:pointer}
 .sec h2{font-size:18px;font-weight:600}
 .link{font-size:11px;letter-spacing:1.6px;color:var(--accent);font-weight:500;display:flex;gap:4px;align-items:center}
 
+/* live 3D hero box (replaces the flat image once the model has loaded; the image stays as fallback) */
+#hero3d{position:absolute;left:50%;top:-14px;width:min(100%,430px);height:300px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .6s}
+.hero.has3d #hero3d{opacity:1}
+.hero.has3d .track{opacity:0;transition:opacity .4s}
 /* hero (unchanged design) */
 .hero{position:relative;height:262px;margin-top:6px;touch-action:pan-y;cursor:grab}
 .hero .glow{position:absolute;left:50%;top:58%;width:300px;height:170px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,var(--glow),transparent);filter:blur(10px);pointer-events:none;animation:gpulse 2.6s ease-in-out infinite}
@@ -975,5 +979,104 @@ addEventListener('resize',fit);fit();
 /* boot */
 [...dots.children][0].classList.add('on');theme(BOXES[0]);paintBox();paintBal();paintSnd();renderSR();renderCol();renderLB();tickReset();
 const h=location.hash.slice(1);if(['showroom','collection','leaderboard','account'].includes(h))show(h);
+</script>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+// Live 3D box in the hero. Reads the classic script's globals (BOXES, cur, curView); falls back to the images on any error.
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+try {
+const hero = document.getElementById('hero');
+const cv = document.createElement('canvas'); cv.id = 'hero3d'; cv.setAttribute('aria-hidden', 'true');
+hero.insertBefore(cv, hero.querySelector('.track'));
+const R = new THREE.WebGLRenderer({canvas: cv, antialias: true, alpha: true, premultipliedAlpha: false});
+const lowPower = (navigator.hardwareConcurrency || 8) <= 4;
+R.setPixelRatio(Math.min(devicePixelRatio, lowPower ? 1.5 : 2)); R.setClearColor(0x000000, 0);
+R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.2; R.outputColorSpace = THREE.SRGBColorSpace;
+const S = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(R);
+{ const env = new THREE.Scene(); env.background = new THREE.Color(0x050506);
+  const card = (w, h, x, y, z, i) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({color: new THREE.Color(i, i, i), side: THREE.DoubleSide})); m.position.set(x, y, z); m.lookAt(0, .5, 0); env.add(m) };
+  card(6, 3, -5, 6, 4, 3.2); card(1.2, 7, 6, 2.5, -3, 2.4); card(1.2, 7, -6.5, 2, -1, 1.6); card(5, 1, 0, 1.2, 7, 1.0); card(8, 8, 0, 9, 0, .35);
+  S.environment = pm.fromScene(env, 0).texture; }
+const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(-3, 5, 3); S.add(key);
+const rim = new THREE.DirectionalLight(0xbfdfff, 1.6); rim.position.set(3.5, 2, -3.5); S.add(rim);
+const fill = new THREE.DirectionalLight(0xffffff, .5); fill.position.set(2, 1, 4); S.add(fill);
+const cam = new THREE.PerspectiveCamera(24, 1, .1, 50);
+{ const az = -0.36, el = .34, d = 5.9; cam.position.set(Math.sin(az) * Math.cos(el) * d, .56 + Math.sin(el) * d, Math.cos(az) * Math.cos(el) * d); cam.lookAt(0, .5, 0); }
+
+// materials
+function brushTex(){const c=document.createElement('canvas');c.width=512;c.height=64;const g=c.getContext('2d');g.fillStyle='#8a8a8a';g.fillRect(0,0,512,64);
+  for(let i=0;i<900;i++){const y=Math.random()*64,v=110+Math.random()*60|0;g.fillStyle=`rgba(${v},${v},${v},.35)`;g.fillRect(0,y,512,Math.random()*1.2+.3)}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,12);return t}
+function zebraTex(){const c=document.createElement('canvas');c.width=c.height=1024;const g=c.getContext('2d');g.fillStyle='#b8b3aa';g.fillRect(0,0,1024,1024);g.fillStyle='#0b0b0b';
+  for(let i=-2;i<14;i++){g.beginPath();const y0=i*78;for(let x=0;x<=1024;x+=8){const y=y0+40*Math.sin(x/120+i*.9)+16*Math.sin(x/37+i);x?g.lineTo(x,y):g.moveTo(x,y)}
+    for(let x=1024;x>=0;x-=8){const w=24+12*Math.sin(x/90+i*1.7);g.lineTo(x,y0+40*Math.sin(x/120+i*.9)+16*Math.sin(x/37+i)+w)}g.closePath();g.fill()}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.repeat.set(1.4,1.4);t.rotation=.5;t.anisotropy=8;return t}
+const BRUSH = brushTex(); let ZEBRA = null, EASTER = null;
+const MATS = {
+  PianoBlack: () => new THREE.MeshPhysicalMaterial({color:0x040405,roughness:.14,clearcoat:1,clearcoatRoughness:.03}),
+  LedIce: () => new THREE.MeshStandardMaterial({color:0, emissive:0xdff1ff, emissiveIntensity:3.2}),
+  LedRed: () => new THREE.MeshStandardMaterial({color:0, emissive:0xff1a26, emissiveIntensity:5}),
+  InteriorMatte: () => new THREE.MeshStandardMaterial({color:0x0b0b0c, roughness:.95}),
+  HingeSteel: () => new THREE.MeshStandardMaterial({color:0x8a8e96, metalness:1, roughness:.3}),
+};
+function byRule(m){const n=m.name||'',col=(m.color||new THREE.Color(1,1,1)).clone();
+  if(n.startsWith('Led')){const e=(m.emissive&&m.emissive.getHex())?m.emissive.clone():col;return new THREE.MeshStandardMaterial({color:0,emissive:e,emissiveIntensity:3.2})}
+  if(/Metal|Rail|Chrome/.test(n))return new THREE.MeshStandardMaterial({color:/Chrome/.test(n)?0xdfe3ea:col,metalness:1,roughness:.16,roughnessMap:BRUSH,envMapIntensity:.8});
+  if(/Gloss|Gold|Lavender/.test(n))return new THREE.MeshPhysicalMaterial({color:col,metalness:.85,roughness:.3,clearcoat:.15,clearcoatRoughness:.08,envMapIntensity:.45});
+  if(n==='ZebraFur'){ZEBRA=ZEBRA||zebraTex();return new THREE.MeshStandardMaterial({map:ZEBRA,roughness:.85})}
+  if(n==='EasterFront'){if(!EASTER){EASTER=new THREE.TextureLoader().load('assets/3d/easter_front.png');EASTER.colorSpace=THREE.SRGBColorSpace;EASTER.flipY=false}
+    return new THREE.MeshPhysicalMaterial({map:EASTER,metalness:.2,roughness:.3,clearcoat:.4})}
+  return null}
+
+const loader = new GLTFLoader(), cache = {}, models = {};
+function keyOf(b){const m=/3d\/(\w+)-box/.exec(b.img);return m?m[1]:'agent'}
+function load(k){ if(models[k]) return models[k];
+  return models[k] = loader.loadAsync('assets/3d/' + k + '.glb').then(g => { const root = g.scene;
+    root.traverse(o => { if(o.isMesh && o.material.name === 'EasterFront'){ const geo = o.geometry, p = geo.attributes.position; geo.computeBoundingBox(); const bb = geo.boundingBox, uv = new Float32Array(p.count * 2);
+        for(let i = 0; i < p.count; i++){ uv[2*i] = (p.getX(i) - bb.min.x) / (bb.max.x - bb.min.x); uv[2*i+1] = 1 - (p.getY(i) - bb.min.y) / (bb.max.y - bb.min.y) } geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)) } });
+    root.traverse(o => { if(o.isMesh){ const n = o.material.name; if(!cache[n]) cache[n] = MATS[n] ? MATS[n]() : (byRule(o.material) || o.material); o.material = cache[n] } });
+    const box = new THREE.Box3().setFromObject(root); root.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+    const holder = new THREE.Group(); holder.add(root); return holder; }) }
+
+const comp = new EffectComposer(R, new THREE.WebGLRenderTarget(1, 1, {type: THREE.HalfFloatType, format: THREE.RGBAFormat}));
+comp.addPass(new RenderPass(S, cam));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .45, .3, 1.7); comp.addPass(bloom); comp.addPass(new OutputPass());
+function size(){ const w = cv.clientWidth, h = cv.clientHeight; if(!w || !h) return; R.setSize(w, h, false); comp.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix() }
+addEventListener('resize', size); size();
+
+let shown = -1, active = null, swapT = 1, swapAt = 0, pending = null, tiltX = 0, tiltY = 0, tx = 0, ty = 0;
+hero.addEventListener('pointermove', e => { const r = hero.getBoundingClientRect(); tx = ((e.clientX - r.left) / r.width - .5); ty = ((e.clientY - r.top) / r.height - .5) });
+hero.addEventListener('pointerleave', () => { tx = ty = 0 });
+async function sync(){ const n = cur; if(n === shown) return; shown = n; const k = keyOf(BOXES[n]);
+  const m = await load(k); if(shown !== n) return; pending = m; swapT = 0; swapAt = performance.now();
+  BOXES.forEach(b => load(keyOf(b))); }   // warm the rest in the background
+const clock = new THREE.Clock();
+function frame(){ requestAnimationFrame(frame);
+  const visible = typeof curView === 'undefined' || (curView === 'boxes' && !document.querySelector('.rv-on') && !document.hidden);
+  if(!visible) { clock.getDelta(); return; }
+  if(typeof cur !== 'undefined' && cur !== shown) sync();
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  const now = performance.now();   // time-based, so the swap finishes even when frames are sparse
+  if(pending){ swapT = active ? (now - swapAt) / 280 : 1; if(swapT >= 1){ if(active) S.remove(active); active = pending; pending = null; S.add(active); swapT = 0; active.userData.inAt = now } }
+  if(active){ const inT = Math.min(1, (now - active.userData.inAt) / 450);
+    const e = 1 - Math.pow(1 - inT, 3);
+    tiltX += (tx - tiltX) * .08; tiltY += (ty - tiltY) * .08;
+    active.rotation.y = .16 * Math.sin(t * .45) + tiltX * .6 + (1 - e) * 1.4;
+    active.rotation.x = tiltY * .12;
+    active.position.y = .05 * Math.sin(t * 1.35);
+    active.scale.setScalar(.55 + .45 * e);
+    if(pending){ active.scale.setScalar(1 - .4 * swapT); active.rotation.y -= swapT * 1.2 } }
+  comp.render(); }
+const first = load(keyOf(BOXES[typeof cur !== 'undefined' ? cur : 0])).then(() => { hero.classList.add('has3d'); size(); });
+first.catch(err => { console.warn('3D hero off:', err); cv.remove(); });
+frame();
+} catch(err) { console.warn('3D hero off:', err); }
 </script>
 </body></html>
