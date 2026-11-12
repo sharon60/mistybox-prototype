@@ -1073,7 +1073,8 @@ function keyOf(b){const m=/3d\/(\w+)-box/.exec(b.img);return m?m[1]:'agent'}
 function load(k){ if(models[k]) return models[k];
   return models[k] = loader.loadAsync('assets/3d/' + k + '.glb').then(g => { const root = g.scene;
     root.traverse(o => { if(o.isMesh && /Front$/.test(o.material.name)){ const geo = o.geometry, p = geo.attributes.position; geo.computeBoundingBox(); const bb = geo.boundingBox, uv = new Float32Array(p.count * 2);
-        for(let i = 0; i < p.count; i++){ uv[2*i] = (p.getX(i) - bb.min.x) / (bb.max.x - bb.min.x); uv[2*i+1] = 1 - (p.getY(i) - bb.min.y) / (bb.max.y - bb.min.y) } geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)) } });
+        const sideways = (bb.max.z - bb.min.z) > (bb.max.x - bb.min.x);   // side panels run along z
+        for(let i = 0; i < p.count; i++){ uv[2*i] = sideways ? (p.getZ(i) - bb.min.z) / (bb.max.z - bb.min.z) : (p.getX(i) - bb.min.x) / (bb.max.x - bb.min.x); uv[2*i+1] = 1 - (p.getY(i) - bb.min.y) / (bb.max.y - bb.min.y) } geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)) } });
     root.traverse(o => { if(o.isMesh){ const n = o.material.name; if(!cache[n]) cache[n] = MATS[n] ? MATS[n]() : (byRule(o.material) || o.material); o.material = cache[n] } });
     const box = new THREE.Box3().setFromObject(root); root.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     const holder = new THREE.Group(); holder.add(root); return holder; }) }
