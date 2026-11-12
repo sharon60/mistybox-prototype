@@ -749,7 +749,7 @@ async function cardBitmap(c,CSx,TH){TH=TH||{w1:'#ff2fd8',w2:'#1fd0ff',accent:'#5
  g.strokeStyle=hexA(M,.9);g.lineWidth=.6;const yy=CH*.845+7;g.beginPath();g.moveTo(10,yy);g.lineTo(CW/2-mw/2-4,yy);g.moveTo(CW/2+mw/2+4,yy);g.lineTo(CW-10,yy);g.stroke();
  return cv}
 // lid seam per box render (percent of image): left corner, front corner, right corner, edge; back corner of the opening
-const GEO={std:{seam:[[0.0, 32.4], [24.3, 49.0], [95.9, 31.8], [100.0, 28.6]],back:[72.4, 15.1],hinge:'38.9% 8.0%',ha:-9.2,lt:'16.5%'}};
+const GEO={std:{seam:[[0.0, 33.0], [25.1, 49.0], [94.3, 32.5], [100.0, 29.3]],back:[71.6, 16.4],hinge:'39.2% 9.6%',ha:-9.2,lt:'16.5%'}};
 GEO.crown=GEO.std;   // all skins are rendered from the same 3D model + camera
 function OBOX(b){const G=GEO[b.key==='icy'?'crown':'std'],sm=G.seam,pt=p=>`${p[0]}% ${p[1]}%`;
  const lid=`polygon(0 0,100% 0,${[...sm].reverse().map(p=>pt([p[0],p[1]+.6])).join(',')})`,body=`polygon(${sm.map(pt).join(',')},100% 100%,0 100%)`;
@@ -765,7 +765,7 @@ function OBOX(b){const G=GEO[b.key==='icy'?'crown':'std'],sm=G.seam,pt=p=>`${p[0
 function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();paintBal();
  const win=draw(b);lastWin={id:win.id,box:bi};
  const rv=$('#reveal'),W=scr.clientWidth,H=scr.clientHeight,cx=W/2,boxY=H*.54,ringY=boxY-24,R=Math.min(170,W*.43),O=4;
- const OB=OBOX(b),BW=190,BH=BW*(755/900),hX=cx-BW/2+BW*OB.hx/100,hY=boxY-BH/2+BH*OB.hy/100;
+ const OB=OBOX(b),BW=190,BH=BW*(760/900),hX=cx-BW/2+BW*OB.hx/100,hY=boxY-BH/2+BH*OB.hy/100;
  rv.style.setProperty('--rc',b.accent);
  // pick 10 cards: the winner + 9 others from this box
  const others=b.items.filter(i=>i.id!==win.id).sort(()=>Math.random()-.5).slice(0,9);
