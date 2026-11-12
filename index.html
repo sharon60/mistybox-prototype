@@ -450,7 +450,7 @@ u|Timex|Expedition Scout (White)|49|timex-expedition-scout-40mm-white
 c|U.S. Polo Assn.|Chronograph|22|accutime-us-polo-assn-chronograph
 c|KXAITO|LED Military Watch (Black)|21|kxaito-led-outdoor-waterproof-military-watch-black
 c|KXAITO|LED Military Watch (Blue)|21|kxaito-led-outdoor-waterproof-military-watch-blue`},
- {tier:'Icon',key:'silver',price:100,min:40,max:4000,skin:'Creature Collector',img:'assets/3d/creature-box.webp',led:'assets/3d/creature-led.png',w:240,w1:'#00c8ff',w2:'#ffd60a',accent:'#ffd60a',glow:'rgba(0,190,255,.6)',c1:'#fff17a',c2:'#ffd60a',c3:'#f5b400',ctat:'#0a0f2a',cglow:'rgba(255,214,10,.5)',
+ {tier:'Icon',key:'silver',price:100,min:40,max:4000,skin:'Halloween Night',img:'assets/3d/halloween-box.webp',led:'assets/3d/halloween-led.png',w:240,w1:'#ff7a12',w2:'#8b3dff',accent:'#ff8a1f',glow:'rgba(255,120,20,.55)',c1:'#ffd08a',c2:'#ff9a3c',c3:'#e2661a',ctat:'#1a0826',cglow:'rgba(255,130,30,.5)',
   odds:{common:[45.47,'$40 – $44'],uncommon:[29.65,'$45 – $95'],rare:[12.37,'$100 – $120'],epic:[6.92,'$125 – $158'],legendary:[3.46,'$160 – $180'],grail:[2.13,'$195 – $4K']},
   items:`g|Cartier|Tank (Metal)|4000|cartier-tank-metal
 g|Cartier|Tank (Leather)|3750|cartier-tank-leather
@@ -1027,7 +1027,7 @@ function zebraTex(){const c=document.createElement('canvas');c.width=c.height=10
   for(let i=-2;i<14;i++){g.beginPath();const y0=i*78;for(let x=0;x<=1024;x+=8){const y=y0+40*Math.sin(x/120+i*.9)+16*Math.sin(x/37+i);x?g.lineTo(x,y):g.moveTo(x,y)}
     for(let x=1024;x>=0;x-=8){const w=24+12*Math.sin(x/90+i*1.7);g.lineTo(x,y0+40*Math.sin(x/120+i*.9)+16*Math.sin(x/37+i)+w)}g.closePath();g.fill()}
   const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.colorSpace=THREE.SRGBColorSpace;t.repeat.set(1.4,1.4);t.rotation=.5;t.anisotropy=8;return t}
-const BRUSH = brushTex(); let ZEBRA = null, EASTER = null;
+const BRUSH = brushTex(); let ZEBRA = null; const FRONTS = {};
 const MATS = {
   PianoBlack: () => new THREE.MeshPhysicalMaterial({color:0x040405,roughness:.14,clearcoat:1,clearcoatRoughness:.03}),
   LedIce: () => new THREE.MeshStandardMaterial({color:0, emissive:0xdff1ff, emissiveIntensity:3.2}),
@@ -1038,10 +1038,10 @@ const MATS = {
 function byRule(m){const n=m.name||'',col=(m.color||new THREE.Color(1,1,1)).clone();
   if(n.startsWith('Led')){const e=(m.emissive&&m.emissive.getHex())?m.emissive.clone():col;return new THREE.MeshStandardMaterial({color:0,emissive:e,emissiveIntensity:3.2})}
   if(/Metal|Rail|Chrome/.test(n))return new THREE.MeshStandardMaterial({color:/Chrome/.test(n)?0xdfe3ea:col,metalness:1,roughness:.16,roughnessMap:BRUSH,envMapIntensity:.8});
-  if(/Gloss|Gold|Lavender/.test(n))return new THREE.MeshPhysicalMaterial({color:col,metalness:.85,roughness:.3,clearcoat:.15,clearcoatRoughness:.08,envMapIntensity:.45});
+  if(/Gloss|Gold|Lavender|Night/.test(n))return new THREE.MeshPhysicalMaterial({color:col,metalness:.85,roughness:.3,clearcoat:.15,clearcoatRoughness:.08,envMapIntensity:.45});
   if(n==='ZebraFur'){ZEBRA=ZEBRA||zebraTex();return new THREE.MeshStandardMaterial({map:ZEBRA,roughness:.85})}
-  if(n==='EasterFront'){if(!EASTER){EASTER=new THREE.TextureLoader().load('assets/3d/easter_front.png');EASTER.colorSpace=THREE.SRGBColorSpace;EASTER.flipY=false}
-    return new THREE.MeshPhysicalMaterial({map:EASTER,metalness:.2,roughness:.3,clearcoat:.4})}
+  if(/Front$/.test(n)){const key=n.replace(/Front$/,'').toLowerCase();FRONTS[key]=FRONTS[key]||(()=>{const t=new THREE.TextureLoader().load('assets/3d/'+key+'_front.png');t.colorSpace=THREE.SRGBColorSpace;t.flipY=false;return t})();
+    return new THREE.MeshPhysicalMaterial({map:FRONTS[key],metalness:.2,roughness:.3,clearcoat:.4})}
   return null}
 
 const BLACK = new THREE.MeshBasicMaterial({color: 0x000000});
@@ -1072,7 +1072,7 @@ const loader = new GLTFLoader(), cache = {}, models = {};
 function keyOf(b){const m=/3d\/(\w+)-box/.exec(b.img);return m?m[1]:'agent'}
 function load(k){ if(models[k]) return models[k];
   return models[k] = loader.loadAsync('assets/3d/' + k + '.glb').then(g => { const root = g.scene;
-    root.traverse(o => { if(o.isMesh && o.material.name === 'EasterFront'){ const geo = o.geometry, p = geo.attributes.position; geo.computeBoundingBox(); const bb = geo.boundingBox, uv = new Float32Array(p.count * 2);
+    root.traverse(o => { if(o.isMesh && /Front$/.test(o.material.name)){ const geo = o.geometry, p = geo.attributes.position; geo.computeBoundingBox(); const bb = geo.boundingBox, uv = new Float32Array(p.count * 2);
         for(let i = 0; i < p.count; i++){ uv[2*i] = (p.getX(i) - bb.min.x) / (bb.max.x - bb.min.x); uv[2*i+1] = 1 - (p.getY(i) - bb.min.y) / (bb.max.y - bb.min.y) } geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)) } });
     root.traverse(o => { if(o.isMesh){ const n = o.material.name; if(!cache[n]) cache[n] = MATS[n] ? MATS[n]() : (byRule(o.material) || o.material); o.material = cache[n] } });
     const box = new THREE.Box3().setFromObject(root); root.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
