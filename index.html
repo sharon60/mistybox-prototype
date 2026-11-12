@@ -255,10 +255,12 @@ button{background:none;border:0;cursor:pointer}
 .rv-box.lidopen .lidp{transform:rotate(var(--ha)) translateY(var(--lt)) scaleY(var(--open,-1.25)) rotate(calc(var(--ha) * -1));filter:brightness(.85) drop-shadow(0 -4px 16px var(--rc));z-index:0}
 .ob .holeglow{animation:hg 1.6s ease-in-out infinite}
 @keyframes hg{0%,100%{opacity:.85}50%{opacity:1}}
-.rv-box.charge .ledglow{animation:charge 4s ease-in forwards}
+.rv-box .ledglow{display:none}
+.rv-box.charge .led{animation:chargeo 4s ease-in forwards}
+@keyframes chargeo{from{opacity:.5}to{opacity:1}}
 .rv-box.shake2 .ob{animation:shake2 .06s linear infinite}
 @keyframes shake2{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,1.5px) rotate(-1.2deg)}50%{transform:translate(2.5px,-2px) rotate(1deg)}75%{transform:translate(-1.5px,2px) rotate(-.6deg)}}
-.reveal.quake>*:not(.rv-info){animation:quake .18s linear}
+.rv-box.quake{animation:quake .18s linear}
 @keyframes quake{0%,100%{translate:0 0}20%{translate:-5px 3px}40%{translate:4px -4px}60%{translate:-3px -2px}80%{translate:3px 3px}}
 .rv-lbl{position:absolute;left:0;right:0;top:19%;text-align:center;font-size:11px;letter-spacing:5px;font-weight:600;color:rgba(255,255,255,.75);z-index:9;transition:opacity .4s}
 .rv-lbl b{display:block;font-size:44px;letter-spacing:-1px;margin-top:6px;color:#fff;text-shadow:0 0 24px var(--rc);font-variant-numeric:tabular-nums}
@@ -266,11 +268,11 @@ button{background:none;border:0;cursor:pointer}
 .rv-box.sink{transform:translate(-50%,-30%) scale(.8);opacity:.25;filter:blur(2px)}
 @keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-1.5px,.5px) rotate(-.6deg)}50%{transform:translate(1px,-1px) rotate(.5deg)}75%{transform:translate(-.5px,1px)}}
 @keyframes charge{from{opacity:.4;filter:blur(7px) brightness(1.5)}to{opacity:1;filter:blur(12px) brightness(4)}}
-.rv-beam{position:absolute;left:50%;width:150px;height:430px;transform:translate(-50%,-100%) scaleY(0);transform-origin:50% 100%;background:linear-gradient(0deg,color-mix(in srgb,var(--rc) 70%,#fff) 0%,color-mix(in srgb,var(--rc) 35%,transparent) 35%,transparent 100%);filter:blur(16px);opacity:0;z-index:2;pointer-events:none}
+.rv-beam{position:absolute;left:50%;width:150px;height:430px;transform:translate(-50%,-100%) scaleY(0);transform-origin:50% 100%;background:linear-gradient(0deg,color-mix(in srgb,var(--rc) 70%,#fff) 0%,color-mix(in srgb,var(--rc) 35%,transparent) 35%,transparent 100%);opacity:0;z-index:2;pointer-events:none}
 .rv-beam.on{animation:beam 2.4s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes beam{0%{opacity:0;transform:translate(-50%,-100%) scaleY(.1)}15%{opacity:1;transform:translate(-50%,-100%) scaleY(1)}100%{opacity:0;transform:translate(-50%,-100%) scaleY(1.1) scaleX(1.6)}}
 .rv-smoke{position:absolute;left:50%;width:0;height:0;z-index:4;pointer-events:none}
-.rv-smoke i{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px;border-radius:50%;background:radial-gradient(closest-side,rgba(220,220,230,.28),transparent);filter:blur(10px);opacity:0}
+.rv-smoke i{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px;border-radius:50%;background:radial-gradient(closest-side,rgba(220,220,230,.22),transparent);opacity:0}
 .rv-smoke.on i{animation:puff 2.6s ease-out forwards}
 @keyframes puff{0%{opacity:0;transform:translate(0,0) scale(.3)}20%{opacity:.9}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(2.4)}}
 .card3{position:absolute;left:0;top:0;width:100px;height:140px;margin:-70px 0 0 -50px;will-change:transform,opacity;pointer-events:none;--n:13px}
@@ -709,6 +711,34 @@ $('#lbOpen').onclick=()=>{show('boxes');openBuy(cur)};
 function draw(b){let r=Math.random()*100,t='common';for(const k of ['grail','legendary','epic','rare','uncommon','common']){r-=b.odds[k][0];if(r<=0){t=k;break}}
  const pool=b.items.filter(i=>i.tier===t);return pool[Math.floor(Math.random()*pool.length)]}
 let lastWin=null,RV=null;
+const CW=100,CH=140,CS=2;
+function rr(g,n){g.beginPath();g.moveTo(n,0);g.lineTo(CW,0);g.lineTo(CW,CH);g.lineTo(0,CH);g.lineTo(0,n);g.closePath()}
+function loadImg(src){return new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.onerror=()=>r(null);im.src=src})}
+async function cardBitmap(c){const cv=document.createElement('canvas');cv.width=(CW+16)*CS;cv.height=(CH+16)*CS;const g=cv.getContext('2d');g.scale(CS,CS);g.translate(8,8);
+ const im=await loadImg(c.img);
+ // neon glow + frame
+ const fg=g.createLinearGradient(0,0,CW,CH);fg.addColorStop(0,'#ff3fe0');fg.addColorStop(.5,'#8a4dff');fg.addColorStop(1,'#2e6bff');
+ g.save();g.shadowColor='#7a4dff';g.shadowBlur=10;rr(g,13);g.fillStyle=fg;g.fill();g.restore();
+ // panel
+ g.save();g.translate(2,2);g.scale((CW-4)/CW,(CH-4)/CH);rr(g,12);g.clip();
+ const bg=g.createLinearGradient(0,0,0,CH);bg.addColorStop(0,'#0a0a3a');bg.addColorStop(.55,'#120a5a');bg.addColorStop(1,'#2a0c6a');g.fillStyle=bg;g.fillRect(0,0,CW,CH);
+ const rg=g.createRadialGradient(CW/2,CH*.42,4,CW/2,CH*.42,70);rg.addColorStop(0,'rgba(70,90,255,.6)');rg.addColorStop(1,'rgba(70,90,255,0)');g.fillStyle=rg;g.fillRect(0,0,CW,CH);
+ g.strokeStyle='rgba(120,150,255,.16)';g.lineWidth=.6;for(let x=4;x<CW;x+=6){g.beginPath();g.moveTo(x,0);g.lineTo(x,CH);g.stroke()}
+ g.strokeStyle='rgba(140,170,255,.18)';for(let r=12;r<70;r+=11){g.beginPath();g.arc(CW/2,CH*.4,r,0,7);g.stroke()}
+ if(im){const fit=(w,h)=>{const k=Math.min(w/im.width,h/im.height);return[im.width*k,im.height*k]};
+  g.globalAlpha=.2;let [w,h]=fit(58,72);g.drawImage(im,-w*.45,CH*.12,w,h);g.drawImage(im,CW-w*.55,CH*.12,w,h);g.globalAlpha=1;
+  [w,h]=fit(78,80);g.drawImage(im,(CW-w)/2,CH*.07,w,h)}
+ g.restore();
+ // tier pill
+ g.font='700 5px Poppins,sans-serif';const tl=c.tier.toUpperCase(),tw=g.measureText(tl).width+8;g.fillStyle=RC[c.tier];g.globalAlpha=.85;g.beginPath();g.roundRect?g.roundRect(CW-tw-6,5,tw,9,3):g.rect(CW-tw-6,5,tw,9);g.fill();g.globalAlpha=1;g.fillStyle='#fff';g.textAlign='center';g.fillText(tl,CW-6-tw/2,11.4);
+ // text
+ const clip=(t,max)=>{while(g.measureText(t).width>max&&t.length>3)t=t.slice(0,-2);return t};
+ g.textAlign='center';g.fillStyle='#fff';g.shadowColor='rgba(120,140,255,.8)';g.shadowBlur=4;
+ g.font='600 7.6px Poppins,sans-serif';let n1=c.brand;g.fillText(clip(n1,86)+(g.measureText(n1).width>86?'…':''),CW/2,CH*.6);
+ g.font='400 7px Poppins,sans-serif';let n2=c.model;const t2=clip(n2,86);g.fillText(t2+(t2!==n2?'…':''),CW/2,CH*.6+9);
+ g.shadowBlur=0;g.font='600 5px Poppins,sans-serif';g.fillStyle='rgba(255,255,255,.7)';g.fillText('MARKET VALUE',CW/2,CH*.83);
+ g.font='700 16px Poppins,sans-serif';g.fillStyle='#fff';g.shadowColor='#ff3fe0';g.shadowBlur=8;g.fillText(money(c.price),CW/2,CH*.95);
+ return cv}
 // lid seam per box render (percent of image): left corner, front corner, right corner, edge; back corner of the opening
 const GEO={std:{seam:[[0,24.6],[26.2,44.9],[95.7,37.7],[100,37.4]],back:[69.5,17.4],hinge:'40% 4%',ha:-4.7,lt:'16.5%'},
  crown:{seam:[[0,24.9],[26.3,43.8],[99.4,37.3],[100,37.2]],back:[73.2,18.4],hinge:'40% 5.5%',ha:-4.1,lt:'15.8%'}};
@@ -732,17 +762,20 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
  const others=b.items.filter(i=>i.id!==win.id).sort(()=>Math.random()-.5).slice(0,9);
  const N=others.length+1,wIdx=Math.random()*N|0;const cards=[...others];cards.splice(wIdx,0,win);
  const smoke=Array.from({length:9},(_,k)=>{const a=(k/9)*Math.PI*2;return `<i style="--dx:${Math.cos(a)*110|0}px;--dy:${(Math.sin(a)*40-60)|0}px;animation-delay:${k*.04}s"></i>`}).join('');
- rv.innerHTML=`<div class="rv-amb"></div><canvas id="rvc"></canvas><div class="rv-floor" style="top:${boxY+70}px"></div>
+ rv.innerHTML=`<div class="rv-amb"></div><canvas id="rvk" style="z-index:1"></canvas><canvas id="rvc" style="z-index:7"></canvas><div class="rv-floor" style="top:${boxY+70}px"></div>
   <div class="rv-beam" id="rvBeam" style="top:${hY+6}px;left:${hX}px"></div>
   <div class="rv-box charge" id="rvBox" style="top:${boxY}px;width:${BW}px">${OB.html}</div>
   <div class="rv-smoke" id="rvSmoke" style="top:${hY}px;left:${hX}px">${smoke}</div>
-  ${cards.map((c,i)=>`<div class="card3" data-i="${i}" style="opacity:0;--rc:${RC[c.tier]}"><div class="ng"></div><div class="nf"></div><div class="nb"><img class="gh l" src="${c.img}" alt=""><img class="gh r" src="${c.img}" alt=""><img class="wm" src="${c.img}" alt=""><span class="tp">${c.tier.toUpperCase()}</span><div class="nm">${esc(c.brand)}<em>${esc(c.model)}</em></div><div class="mv"><small>MARKET VALUE</small>${money(c.price)}</div></div></div>`).join('')}
+  <canvas id="rvf" style="z-index:6"></canvas>
   <div class="rv-lbl" id="rvLbl">OPENING ${esc(b.skin.toUpperCase())}<b id="rvCount">3</b></div><div class="flash" id="flash"></div><div class="rv-skip" id="rvSkip">TAP TO SKIP</div><div class="rv-info" id="rvInfo"></div>`;
  rv.classList.add('on');scr.classList.add('rv-on');
- const MOB=matchMedia('(max-width:500px)').matches,cv=$('#rvc'),dpr=Math.min(MOB?1:1.5,devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
- const els=[...rv.querySelectorAll('.card3')],box=$('#rvBox');
+ const MOB=matchMedia('(max-width:500px)').matches,dpr=Math.min(MOB?1.5:2,devicePixelRatio||1);
+ const mk=id=>{const c=$(id);c.width=W*dpr;c.height=H*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);return x};
+ const g=mk('#rvc'),gF=mk('#rvf'),gB=mk('#rvk'),box=$('#rvBox'),SB=MOB?0:1;
+ let BM=null;Promise.all(cards.map(cardBitmap)).then(r=>BM=r);
+ const up=new Array(N).fill(false),last=new Array(N);
  const sparks=[];const spawn=(n,burst)=>{for(let k=0;k<n;k++)sparks.push({x:hX+(Math.random()-.5)*(burst?70:90),y:hY+(Math.random()-.5)*14,vx:(Math.random()-.5)*(burst?3.2:.8),vy:-(Math.random()*(burst?4.5:1.4)+.4),l:1,s:Math.random()*1.8+.6})};
- const TOT=Math.PI*2*3-wIdx*Math.PI*2/N;let t0=performance.now(),phase=0,lastTick=0,done=false,skip=false;
+ const TOT=Math.PI*2*3-wIdx*Math.PI*2/N;let t0=performance.now(),phase=0,lastTick=0,done=false,skip=false,tF=0;
  const ease=x=>1-Math.pow(1-Math.min(1,Math.max(0,x)),3);
  const MUS=startMusic(O);setTimeout(()=>box.classList.add('shake'),300);setTimeout(()=>{if(phase===0)box.classList.add('shake2')},2600);
  const bolts=[];let nextStrike=.6,amb=rv.querySelector('.rv-amb');
@@ -752,15 +785,15 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
  function strike(big){const tx=hX+(Math.random()-.5)*(big?10:140),ty=big?hY:boxY-40+(Math.random()-.5)*30;bolt(big?tx:Math.random()*W,-10,tx,ty,big?3.4:1.8);
   if(Math.random()<.5&&!big)bolt(Math.random()*W,-10,tx+(Math.random()-.5)*60,ty,1.2);
   const f=$('#flash');f.style.opacity='';f.classList.remove('go');void f.offsetWidth;if(big)f.classList.add('go');else{f.style.transition='none';f.style.opacity=.28;requestAnimationFrame(()=>{f.style.transition='opacity .35s';f.style.opacity=0})}
-  rv.classList.remove('quake');void rv.offsetWidth;rv.classList.add('quake');amb.style.opacity=1;setTimeout(()=>amb.style.opacity='',250);SFX.thunder(big?1:.55);try{navigator.vibrate&&navigator.vibrate(big?60:20)}catch(e){}}
+  box.classList.remove('quake');void box.offsetWidth;box.classList.add('quake');amb.style.opacity=1;setTimeout(()=>amb.style.opacity='',250);SFX.thunder(big?1:.55);try{navigator.vibrate&&navigator.vibrate(big?60:20)}catch(e){}}
  function drawBolts(){for(const bb of bolts){if(bb.l<=0)continue;const fl=bb.l>.5||Math.random()>.4;if(fl){g.save();g.lineCap='round';g.lineJoin='round';
-   for(const [lw,col,al] of [[bb.w*4,b.accent,.35],[bb.w,'#fff',1]]){g.globalAlpha=al*bb.l;g.strokeStyle=col;g.shadowColor=b.accent;g.shadowBlur=24;g.lineWidth=lw;g.beginPath();bb.pts.forEach((p,k)=>k?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
+   for(const [lw,col,al] of [[bb.w*4,b.accent,.35],[bb.w,'#fff',1]]){g.globalAlpha=al*bb.l;g.strokeStyle=col;g.shadowColor=b.accent;g.shadowBlur=24*SB;g.lineWidth=lw;g.beginPath();bb.pts.forEach((p,k)=>k?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke();
     g.lineWidth=lw*.5;bb.br.forEach(br=>{g.beginPath();br.forEach((p,k)=>k?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.stroke()})}g.restore()}bb.l-=.055}
   for(let k=bolts.length-1;k>=0;k--)if(bolts[k].l<=0)bolts.splice(k,1)}
- function arcs(){if(Math.random()<.35){g.save();g.strokeStyle='#fff';g.shadowColor=b.accent;g.shadowBlur=14;g.lineWidth=1;g.globalAlpha=.8;const a=Math.random()*Math.PI*2,r1=BW*.55,p0=[cx+Math.cos(a)*r1,boxY+Math.sin(a)*BH*.55],a2=a+(Math.random()-.5)*1.2,p1=[cx+Math.cos(a2)*r1*1.15,boxY+Math.sin(a2)*BH*.6];
+ function arcs(){if(Math.random()<.35){g.save();g.strokeStyle='#fff';g.shadowColor=b.accent;g.shadowBlur=14*SB;g.lineWidth=1;g.globalAlpha=.8;const a=Math.random()*Math.PI*2,r1=BW*.55,p0=[cx+Math.cos(a)*r1,boxY+Math.sin(a)*BH*.55],a2=a+(Math.random()-.5)*1.2,p1=[cx+Math.cos(a2)*r1*1.15,boxY+Math.sin(a2)*BH*.6];
   g.beginPath();g.moveTo(p0[0],p0[1]);for(let k=1;k<6;k++){const p=k/6;g.lineTo(p0[0]+(p1[0]-p0[0])*p+(Math.random()-.5)*14,p0[1]+(p1[1]-p0[1])*p+(Math.random()-.5)*14)}g.lineTo(p1[0],p1[1]);g.stroke();g.restore()}}
  function frame(now){if(done)return;const t=skip?99:(now-t0)/1000;
-  g.clearRect(0,0,W,H);
+  g.clearRect(0,0,W,H);gF.clearRect(0,0,W,H);gB.clearRect(0,0,W,H);
   if(phase===0){const left=Math.max(0,O-t);const c=$('#rvCount');if(c)c.textContent=left>0?Math.ceil(left*3/O):'';
    if(t>=nextStrike){strike(false);nextStrike=t+Math.max(.16,.95-t*.22)+Math.random()*.25}if(t>1.8)arcs()}
   drawBolts();
@@ -768,28 +801,32 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
    const f=$('#flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go');spawn(MOB?35:60,true);SFX.open();setTimeout(()=>SFX.air(),300);try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}}
   if(t>O&&t<O+4.6)spawn(1,false);
   // orbit ring glow
-  if(t>O+1.5){const a=Math.min(1,(t-O-1.5)/.8)*(t>O+5?Math.max(0,1-(t-O-5)/.6):1);g.save();g.globalAlpha=a*.9;g.strokeStyle=b.accent;g.shadowColor=b.accent;g.shadowBlur=18;g.lineWidth=1.4;
-   g.beginPath();g.ellipse(cx,ringY+8,R*1.02,34,0,0,Math.PI*2);g.stroke();g.globalAlpha=a*.25;g.lineWidth=6;g.stroke();g.restore()}
+  if(t>O+1.5){const a=Math.min(1,(t-O-1.5)/.8)*(t>O+5?Math.max(0,1-(t-O-5)/.6):1);gB.save();gB.globalAlpha=a*.9;gB.strokeStyle=b.accent;gB.shadowColor=b.accent;gB.shadowBlur=18*SB;gB.lineWidth=1.4;
+   gB.beginPath();gB.ellipse(cx,ringY+8,R*1.02,34,0,0,Math.PI*2);gB.stroke();gB.globalAlpha=a*.25;gB.lineWidth=6;gB.stroke();gB.restore()}
   // sparks
   for(const p of sparks){p.x+=p.vx;p.y+=p.vy;p.vy+=.02;p.l-=.012;if(p.l>0){g.globalAlpha=p.l;g.fillStyle=Math.random()<.3?'#fff':b.accent;g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.fill()}}
   g.globalAlpha=1;g.shadowBlur=0;for(let k=sparks.length-1;k>=0;k--)if(sparks[k].l<=0)sparks.splice(k,1);
   // cards
-  if(t>O+.3&&phase<3){const em=ease((t-O-1.5)/.9),sp=ease((t-O-1.5)/3.5),base=TOT*sp;
-   const front=Math.floor((base+Math.PI/N)/(Math.PI*2/N));if(t>O+1.6&&front!==lastTick&&t<O+5){lastTick=front;SFX.tick(Math.max(.25,1-sp))}
-   els.forEach((el,i)=>{const ts=O+.35+i*.08,r=ease((t-ts)/.6);if(r>0&&!el.dataset.up){el.dataset.up=1;if(i%2===0)SFX.swish()}
-    const fx=hX+(i-(N-1)/2)*14*r,fy=hY-12-(150+(i%3)*22)*r+Math.sin(t*2+i)*4*r,fs=.12+.42*r;
+  if(t>O+.3&&BM){const em=ease((t-O-1.5)/.9),sp=ease((t-O-1.5)/3.5),base=TOT*sp,fade=phase===3?Math.max(0,1-(t-tF)/.5):1;
+   const front=Math.floor((base+Math.PI/N)/(Math.PI*2/N));if(phase<3&&t>O+1.6&&front!==lastTick&&t<O+5){lastTick=front;SFX.tick(Math.max(.25,1-sp))}
+   const order=[...Array(N).keys()].sort((a,c)=>Math.cos(base+a*Math.PI*2/N)-Math.cos(base+c*Math.PI*2/N));
+   for(const i of order){if(phase===3&&i===wIdx)continue;const ts=O+.35+i*.08,r=ease((t-ts)/.6);if(r<=0)continue;if(!up[i]){up[i]=true;if(i%2===0)SFX.swish()}
+    const fx=hX+(i-(N-1)/2)*15*r,fy=hY-12-160*r+Math.sin(t*2+i)*4*r,fs=.12+.42*r;
     const th=base+i*Math.PI*2/N,dep=Math.cos(th),rx=cx+Math.sin(th)*R,ry=ringY+dep*26+Math.sin(t*1.6+i)*3,rs=.6+.26*dep;
-    const x=fx+(rx-fx)*em,y=fy+(ry-fy)*em,sc=fs+(rs-fs)*em;
-    el.style.transform=`translate(${x}px,${y}px) scale(${sc})`;el.style.opacity=(r*(1-em+em*(.45+.55*(dep+1)/2))).toFixed(3);
-    el.style.zIndex=em<.5?7:(dep>0?6:2)})}
-  if(phase===1&&t>=O+5){phase=3;finish()}
+    const x=fx+(rx-fx)*em,y=fy+(ry-fy)*em+(phase===3?(1-fade)*50:0),sc=fs+(rs-fs)*em,al=r*(1-em+em*(.45+.55*(dep+1)/2))*fade;
+    last[i]=[x,y,sc];if(al<=.01)continue;const ctx=(em<.5||dep>0)?gF:gB,w=(CW+16)*sc,h=(CH+16)*sc;
+    ctx.globalAlpha=al;ctx.drawImage(BM[i],x-w/2,y-h/2,w,h)}
+   gF.globalAlpha=1;gB.globalAlpha=1}
+  if(phase===1&&t>=O+5){phase=3;tF=t;finish()}
   requestAnimationFrame(frame)}
  requestAnimationFrame(frame);
- rv.onclick=e=>{if(phase<3&&!e.target.closest('.rv-info')){if(phase===0){box.classList.remove('shake','shake2','charge');box.classList.add('lidopen');phase=1;MUS.cut();SFX.burst();const lb=$('#rvLbl');if(lb)lb.style.opacity=0}els.forEach(e=>e.dataset.up=1);skip=true}};
- function finish(){$('#rvSkip').style.opacity=0;MUS.stop();const we=els[wIdx];
-  els.forEach((el,i)=>{if(i!==wIdx){el.classList.add('gone');el.style.transform+=' translateY(60px) scale(.6)'}});
+ rv.onclick=e=>{if(phase<3&&!e.target.closest('.rv-info')){if(phase===0){box.classList.remove('shake','shake2','charge');box.classList.add('lidopen');phase=1;MUS.cut();SFX.burst();const lb=$('#rvLbl');if(lb)lb.style.opacity=0}up.fill(true);skip=true}};
+ function finish(){$('#rvSkip').style.opacity=0;MUS.stop();
+  const c=cards[wIdx],L=last[wIdx]||[cx,ringY,.86],we=document.createElement('div');we.className='card3';we.style.cssText=`--rc:${RC[c.tier]};z-index:9;transform:translate(${L[0]}px,${L[1]}px) scale(${L[2]})`;
+  we.innerHTML=`<div class="ng"></div><div class="nf"></div><div class="nb"><img class="gh l" src="${c.img}" alt=""><img class="gh r" src="${c.img}" alt=""><img class="wm" src="${c.img}" alt=""><span class="tp">${c.tier.toUpperCase()}</span><div class="nm">${esc(c.brand)}<em>${esc(c.model)}</em></div><div class="mv"><small>MARKET VALUE</small>${money(c.price)}</div></div>`;
+  rv.appendChild(we);void we.offsetWidth;
   box.classList.remove('open');box.classList.add('sink');
-  we.classList.add('win');we.style.zIndex=9;we.style.opacity=1;rv.style.setProperty('--rc',RC[win.tier]);
+  we.classList.add('win');rv.style.setProperty('--rc',RC[win.tier]);
   requestAnimationFrame(()=>{we.style.transform=`translate(${cx}px,${H*.36}px) scale(2.3)`});
   const f=$('#flash');setTimeout(()=>{f.classList.remove('go');void f.offsetWidth;f.classList.add('go');SFX.reveal(win.tier);spawn(MOB?40:70,true);try{navigator.vibrate&&navigator.vibrate([20,40,60])}catch(e){}},650);
   setTimeout(()=>{const info=$('#rvInfo');
