@@ -271,17 +271,28 @@ button{background:none;border:0;cursor:pointer}
 .rv-smoke i{position:absolute;left:0;top:0;width:120px;height:120px;margin:-60px;border-radius:50%;background:radial-gradient(closest-side,rgba(220,220,230,.28),transparent);filter:blur(10px);opacity:0}
 .rv-smoke.on i{animation:puff 2.6s ease-out forwards}
 @keyframes puff{0%{opacity:0;transform:translate(0,0) scale(.3)}20%{opacity:.9}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(2.4)}}
-.card3{position:absolute;left:0;top:0;width:92px;height:128px;margin:-64px 0 0 -46px;will-change:transform,opacity;pointer-events:none}
-.card3 .cf{width:100%;height:100%;padding:1.5px;--cut:9px;clip-path:polygon(var(--cut) 0,calc(100% - var(--cut)) 0,100% var(--cut),100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,var(--cut) 100%,0 calc(100% - var(--cut)),0 var(--cut));background:linear-gradient(155deg,rgba(255,255,255,.85),rgba(255,255,255,.12) 28%,rgba(255,255,255,.06) 70%,rgba(255,255,255,.6))}
-.card3 .ci{width:100%;height:100%;--cut:8px;clip-path:polygon(var(--cut) 0,calc(100% - var(--cut)) 0,100% var(--cut),100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,var(--cut) 100%,0 calc(100% - var(--cut)),0 var(--cut));background:radial-gradient(90% 60% at 50% 38%,#2a2a2e,#070708 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.card3 .ci:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.16) 45%,transparent 55%);transform:translateX(-100%);animation:glint 3.2s ease-in-out infinite}
-@keyframes glint{0%,60%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-.card3 img{width:78%;height:62%;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
-.card3 .cl{font-size:6.5px;letter-spacing:1.3px;font-weight:700;text-align:center;line-height:1.25;margin-top:5px;padding:0 6px;text-transform:uppercase}
-.card3 .cl em{display:block;font-style:normal;font-weight:500;color:rgba(255,255,255,.6);font-size:5.5px}
-.card3 .bar{width:28%;height:1.5px;background:rgba(255,255,255,.5);margin-top:5px;border-radius:1px}
+.card3{position:absolute;left:0;top:0;width:100px;height:140px;margin:-70px 0 0 -50px;will-change:transform,opacity;pointer-events:none;--n:13px}
+.card3 .ng,.card3 .nf,.card3 .nb{position:absolute;clip-path:polygon(var(--n) 0,100% 0,100% 100%,0 100%,0 var(--n))}
+.card3 .ng{inset:-4px;background:linear-gradient(165deg,#ff3fe0,#8a4dff 45%,#2e6bff);filter:blur(7px);opacity:.85}
+.card3 .nf{inset:0;background:linear-gradient(165deg,#ffb3f5,#ff3fe0 12%,#8a4dff 50%,#2e6bff 88%,#9fd0ff)}
+.card3 .nb{inset:2px;--n:12px;overflow:hidden;background:
+ repeating-linear-gradient(90deg,rgba(120,150,255,.0) 0 7px,rgba(120,150,255,.16) 7px 8px),
+ radial-gradient(70% 45% at 50% 42%,rgba(70,90,255,.55),rgba(20,20,120,.2) 60%,transparent 80%),
+ linear-gradient(180deg,#0a0a3a,#120a5a 55%,#1a0c63 80%,#2a0c6a)}
+.card3 .nb:before{content:"";position:absolute;left:50%;top:40%;width:150%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+ background:repeating-radial-gradient(circle,transparent 0 13px,rgba(140,170,255,.22) 13px 14px);-webkit-mask-image:radial-gradient(closest-side,#000 40%,transparent 75%);mask-image:radial-gradient(closest-side,#000 40%,transparent 75%)}
+.card3 .nb:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.18) 47%,transparent 58%);transform:translateX(-110%);animation:glint 3.4s ease-in-out infinite}
+@keyframes glint{0%,55%{transform:translateX(-110%)}100%{transform:translateX(110%)}}
+.card3 .gh{position:absolute;top:14%;width:58%;height:52%;object-fit:contain;opacity:.22;filter:blur(.6px) hue-rotate(20deg)}
+.card3 .gh.l{left:-30%}.card3 .gh.r{right:-30%}
+.card3 .wm{position:absolute;left:50%;top:8%;width:78%;height:58%;transform:translateX(-50%);object-fit:contain;filter:drop-shadow(0 0 8px rgba(90,120,255,.7)) drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+.card3 .nm{position:absolute;left:7%;right:7%;bottom:32%;text-align:center;font-size:7.6px;font-weight:600;line-height:1.25;color:#fff;text-shadow:0 0 6px rgba(120,140,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card3 .nm em{display:block;font-style:normal;font-weight:400;opacity:.85;overflow:hidden;text-overflow:ellipsis}
+.card3 .mv{position:absolute;left:0;right:0;bottom:7%;text-align:center;font-size:15px;font-weight:700;letter-spacing:-.2px;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 0 10px #ff3fe0,0 0 18px rgba(46,107,255,.9)}
+.card3 .mv small{display:block;font-size:5px;letter-spacing:1.6px;font-weight:600;color:rgba(255,255,255,.7);text-shadow:none;margin-bottom:1px}
+.card3 .tp{position:absolute;top:5px;right:6px;font-size:5px;letter-spacing:1.2px;font-weight:700;padding:1.5px 4px;border-radius:4px;color:#fff;background:color-mix(in srgb,var(--rc) 55%,rgba(0,0,0,.4));border:.5px solid var(--rc);z-index:2}
 .card3.win{transition:transform 1s cubic-bezier(.2,.85,.2,1),opacity .4s}
-.card3.win .cf{background:linear-gradient(155deg,#fff,color-mix(in srgb,var(--rc) 50%,rgba(255,255,255,.2)) 30%,rgba(255,255,255,.1) 70%,#fff)}
+.card3.win .ng{opacity:1;filter:blur(10px)}
 .card3.gone{transition:transform .9s ease-in,opacity .6s;opacity:0!important}
 .rv-info{position:absolute;left:0;right:0;bottom:40px;padding:0 24px;text-align:center;opacity:0;transform:translateY(16px);transition:opacity .6s,transform .6s;z-index:10;cursor:default}
 .rv-info.on{opacity:1;transform:none}
@@ -722,7 +733,7 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
   <div class="rv-beam" id="rvBeam" style="top:${hY+6}px;left:${hX}px"></div>
   <div class="rv-box charge" id="rvBox" style="top:${boxY}px;width:${BW}px">${OB.html}</div>
   <div class="rv-smoke" id="rvSmoke" style="top:${hY}px;left:${hX}px">${smoke}</div>
-  ${cards.map((c,i)=>`<div class="card3" data-i="${i}" style="opacity:0;--rc:${RC[c.tier]}"><div class="cf"><div class="ci"><img src="${c.img}" alt=""><div class="cl">${esc(c.brand)}<em>${esc(c.model)}</em></div><div class="bar"></div></div></div></div>`).join('')}
+  ${cards.map((c,i)=>`<div class="card3" data-i="${i}" style="opacity:0;--rc:${RC[c.tier]}"><div class="ng"></div><div class="nf"></div><div class="nb"><img class="gh l" src="${c.img}" alt=""><img class="gh r" src="${c.img}" alt=""><img class="wm" src="${c.img}" alt=""><span class="tp">${c.tier.toUpperCase()}</span><div class="nm">${esc(c.brand)}<em>${esc(c.model)}</em></div><div class="mv"><small>MARKET VALUE</small>${money(c.price)}</div></div></div>`).join('')}
   <div class="rv-lbl" id="rvLbl">OPENING ${esc(b.skin.toUpperCase())}<b id="rvCount">3</b></div><div class="flash" id="flash"></div><div class="rv-skip" id="rvSkip">TAP TO SKIP</div><div class="rv-info" id="rvInfo"></div>`;
  rv.classList.add('on');
  const cv=$('#rvc'),dpr=Math.min(2,devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext('2d');g.scale(dpr,dpr);
@@ -776,7 +787,7 @@ function openBox(bi){const b=BOXES[bi];S.bal-=b.price;S.pts+=b.price*5;save();pa
   els.forEach((el,i)=>{if(i!==wIdx){el.classList.add('gone');el.style.transform+=' translateY(60px) scale(.6)'}});
   box.classList.remove('open');box.classList.add('sink');
   we.classList.add('win');we.style.zIndex=9;we.style.filter='';we.style.opacity=1;rv.style.setProperty('--rc',RC[win.tier]);
-  requestAnimationFrame(()=>{we.style.transform=`translate(${cx}px,${H*.36}px) scale(2.55)`});
+  requestAnimationFrame(()=>{we.style.transform=`translate(${cx}px,${H*.36}px) scale(2.3)`});
   const f=$('#flash');setTimeout(()=>{f.classList.remove('go');void f.offsetWidth;f.classList.add('go');SFX.reveal(win.tier);spawn(90,true);try{navigator.vibrate&&navigator.vibrate([20,40,60])}catch(e){}},650);
   setTimeout(()=>{const info=$('#rvInfo');
    info.innerHTML=`<div class="rt">${win.tier.toUpperCase()}</div><div class="fv">Fair market value ${money(win.price)} · from ${esc(b.skin)}</div>
