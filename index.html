@@ -789,7 +789,7 @@ function openBuy(bi){const b=BOXES[bi];
  <button class="cta sm" id="confirmBuy">OPEN FOR ${money(b.price)}</button></div>`,el=>el.querySelector('#confirmBuy').onclick=()=>{closeSheet();setTimeout(()=>openPicker(bi),250)})}
 /* pick your box: a ring of identical boxes on a dark stage; drag to turn, the one under the spotlight is yours */
 function openPicker(bi){const b=BOXES[bi],pk=$('#pick');let chosen=false,api=null;
- pk.className='pick';pk.innerHTML=`<div class="curt"></div><div class="beam"></div><div class="pool"></div><div class="vig"></div>
+ pk.className='pick';pk.innerHTML=`<div class="curt"></div><div class="pool"></div><div class="vig"></div>
   <div class="ttl"><div class="k">CHOOSE YOUR BOX</div><div class="n">${esc(b.skin)}</div><div class="s">Every box has the same odds. Trust your gut.</div></div>
   <div class="hint"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V4.5a1.5 1.5 0 0 1 3 0v6"/><path d="M15 10.5V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L3.6 14a1.6 1.6 0 0 1 2.6-1.8L9 15"/></svg><span>Drag to move</span></div>
   <button class="cta pk-go">OPEN THIS BOX</button><button class="pk-x" aria-label="Back">×</button>`;
