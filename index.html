@@ -537,6 +537,9 @@ c|Timex|Peanuts x Marlin Americana|359|timex-peanuts-x-timex-marlin-automatic-am
 // Christmas special (second): same contents and odds as the $100 Icon box
 (()=>{const r=BOXES.find(b=>b.key==='silver');BOXES.splice(1,0,{...r,tier:'Christmas Special',key:'xmas',skin:'Christmas Eve',img:'assets/3d/xmas-box.webp',led:'assets/3d/xmas-led.png',w:240,
  w1:'#1fa055',w2:'#d4a24a',accent:'#e8b04a',glow:'rgba(40,180,90,.5)',c1:'#ffe3a8',c2:'#e8b04a',c3:'#b8862a',ctat:'#06260f',cglow:'rgba(232,176,74,.5)'})})();
+// New Year's Eve special (third): same contents and odds as the $500 Legacy box
+(()=>{const r=BOXES.find(b=>b.key==='gold');BOXES.splice(2,0,{...r,tier:"New Year's Special",key:'nye',skin:'Midnight 2027',img:'assets/3d/nye-box.webp',led:'assets/3d/nye-led.png',w:240,
+ w1:'#f3d28a',w2:'#ffffff',accent:'#f0c873',glow:'rgba(240,200,115,.45)',c1:'#fff1cc',c2:'#f0c873',c3:'#c79a45',ctat:'#1a1408',cglow:'rgba(240,200,115,.5)'})})();
 BOXES.forEach((b,bi)=>{b.items=b.items.trim().split('\n').map(l=>{const[t,br,md,p,s]=l.split('|');return{tier:T1[t],brand:br,model:md,price:+p,img:'assets/watches/'+s+'.webp',id:s,box:bi}})});
 const ALL=(()=>{const m=new Map();BOXES.forEach(b=>b.items.forEach(i=>{if(!m.has(i.id))m.set(i.id,i)}));return[...m.values()].sort((a,b)=>b.price-a.price)})();
 
@@ -1044,6 +1047,7 @@ const MATS = {
 function byRule(m){const n=m.name||'',col=(m.color||new THREE.Color(1,1,1)).clone();
   if(n.startsWith('Led')){const e=(m.emissive&&m.emissive.getHex())?m.emissive.clone():col;return new THREE.MeshStandardMaterial({color:0,emissive:e,emissiveIntensity:3.2})}
   if(/Metal|Rail|Chrome/.test(n))return new THREE.MeshStandardMaterial({color:/Chrome/.test(n)?0xdfe3ea:col,metalness:1,roughness:.16,roughnessMap:BRUSH,envMapIntensity:.8});
+  if(n==='NyeGloss')return new THREE.MeshPhysicalMaterial({color:0x050505,roughness:.18,clearcoat:1,clearcoatRoughness:.03});
   if(n==='XmasGloss')return new THREE.MeshPhysicalMaterial({color:new THREE.Color(.02,.26,.09),metalness:.15,roughness:.38,clearcoat:.7,clearcoatRoughness:.08,envMapIntensity:.6});
   if(n==='SantaGloss')return new THREE.MeshPhysicalMaterial({color:new THREE.Color(.55,.015,.03),metalness:.15,roughness:.38,clearcoat:.7,clearcoatRoughness:.08,envMapIntensity:.6});
   if(/Gloss|Gold|Lavender|Night/.test(n))return new THREE.MeshPhysicalMaterial({color:col,metalness:.85,roughness:.3,clearcoat:.15,clearcoatRoughness:.08,envMapIntensity:.45});
