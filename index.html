@@ -546,6 +546,9 @@ c|Timex|Peanuts x Marlin Americana|359|timex-peanuts-x-timex-marlin-automatic-am
 // St. Patrick's special (fifth): same contents and odds as the $1000 Crown box
 (()=>{const r=BOXES.find(b=>b.key==='icy');BOXES.splice(4,0,{...r,tier:"St. Patrick's Special",key:'patrick',skin:'Pot of Gold',img:'assets/3d/patrick-box.webp',led:'assets/3d/patrick-led.png',w:240,
  w1:'#3ee66b',w2:'#f5c84a',accent:'#4ef07a',glow:'rgba(60,230,110,.5)',c1:'#d8ffd9',c2:'#f5c84a',c3:'#2fb357',ctat:'#062b10',cglow:'rgba(80,240,120,.45)'})})();
+// Easter Egg Hunt special (sixth): same contents and odds as the $100 Icon box
+(()=>{const r=BOXES.find(b=>b.key==='silver');BOXES.splice(5,0,{...r,tier:'Easter Special',key:'eggs',skin:'Egg Hunt',img:'assets/3d/eggs-box.webp',led:'assets/3d/eggs-led.png',w:240,
+ w1:'#ff3caa',w2:'#28dcff',accent:'#ff4fb8',glow:'rgba(255,60,170,.5)',c1:'#ffe0f2',c2:'#28dcff',c3:'#b04dff',ctat:'#062628',cglow:'rgba(40,220,255,.45)'})})();
 BOXES.forEach((b,bi)=>{b.items=b.items.trim().split('\n').map(l=>{const[t,br,md,p,s]=l.split('|');return{tier:T1[t],brand:br,model:md,price:+p,img:'assets/watches/'+s+'.webp',id:s,box:bi}})});
 const ALL=(()=>{const m=new Map();BOXES.forEach(b=>b.items.forEach(i=>{if(!m.has(i.id))m.set(i.id,i)}));return[...m.values()].sort((a,b)=>b.price-a.price)})();
 
@@ -1053,6 +1056,7 @@ const MATS = {
 function byRule(m){const n=m.name||'',col=(m.color||new THREE.Color(1,1,1)).clone();
   if(n.startsWith('Led')){const e=(m.emissive&&m.emissive.getHex())?m.emissive.clone():col;return new THREE.MeshStandardMaterial({color:0,emissive:e,emissiveIntensity:3.2})}
   if(/Metal|Rail|Chrome/.test(n))return new THREE.MeshStandardMaterial({color:/Chrome/.test(n)?0xdfe3ea:col,metalness:1,roughness:.16,roughnessMap:BRUSH,envMapIntensity:.8});
+  if(n==='EggsGloss')return new THREE.MeshPhysicalMaterial({color:new THREE.Color(.02,.42,.45),metalness:.15,roughness:.3,clearcoat:.8,clearcoatRoughness:.08,envMapIntensity:.7});
   if(n==='PatrickGloss')return new THREE.MeshPhysicalMaterial({color:new THREE.Color(.05,.55,.13),metalness:.15,roughness:.32,clearcoat:.75,clearcoatRoughness:.08,envMapIntensity:.7});
   if(n==='ValentineGloss')return new THREE.MeshPhysicalMaterial({color:new THREE.Color(.42,.02,.07),metalness:.15,roughness:.36,clearcoat:.7,clearcoatRoughness:.08,envMapIntensity:.6});
   if(n==='NyeGloss')return new THREE.MeshPhysicalMaterial({color:0x050505,roughness:.18,clearcoat:1,clearcoatRoughness:.03});
