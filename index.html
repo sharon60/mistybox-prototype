@@ -988,7 +988,7 @@ function fit(){if(innerWidth<=500){$('#phone').style.transform='';return}const s
 addEventListener('resize',fit);fit();
 
 /* boot */
-[...dots.children][0].classList.add('on');theme(BOXES[0]);paintBox();paintBal();paintSnd();renderSR();renderCol();renderLB();tickReset();
+[...dots.children][0].classList.add('on');theme(BOXES[0]);$('#name').textContent=BOXES[0].skin;paintBox();paintBal();paintSnd();renderSR();renderCol();renderLB();tickReset();
 const h=location.hash.slice(1);if(['showroom','collection','leaderboard','account'].includes(h))show(h);
 </script>
 
