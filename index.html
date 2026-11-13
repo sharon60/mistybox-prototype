@@ -244,6 +244,30 @@ button{background:none;border:0;cursor:pointer}
 .steps b{display:block;color:#fff;font-size:13.5px;margin-bottom:3px}
 
 /* reveal overlay: box opens, glass watch cards orbit, winner flies to front */
+/* stage spotlight (hero) + pick-your-box carousel */
+.hero .hspot{position:absolute;left:50%;top:-120px;width:340px;height:380px;transform:translateX(-50%);pointer-events:none;mix-blend-mode:screen;filter:blur(16px);
+ background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 30%,#7c82ff) 0%,color-mix(in srgb,var(--accent) 20%,rgba(110,116,255,.35)) 45%,transparent 100%);opacity:.42;clip-path:polygon(39% 0,61% 0,92% 100%,8% 100%);animation:hspot 5s ease-in-out infinite}
+@keyframes hspot{50%{opacity:.3}}
+.pick{position:absolute;inset:0;z-index:29;background:#04030b;display:none;overflow:hidden;touch-action:none;cursor:grab;opacity:0;transition:opacity .45s;user-select:none;-webkit-user-select:none}
+.pick.on{display:block}.pick.vis{opacity:1}.pick:active{cursor:grabbing}
+.pk-on .views,.pk-on .top,.pk-on .nav,.pk-on .bg{visibility:hidden}
+.pick .curt{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.016) 0 26px,rgba(0,0,0,.32) 26px 64px,rgba(255,255,255,.01) 64px 96px);pointer-events:none}
+.pick .beam{position:absolute;left:50%;top:-4%;width:118%;height:76%;transform:translateX(-50%);pointer-events:none;mix-blend-mode:screen;filter:blur(20px);
+ background:linear-gradient(180deg,rgba(92,100,255,.62),rgba(92,100,255,.2) 55%,rgba(92,100,255,0));clip-path:polygon(40% 0,60% 0,84% 100%,16% 100%);animation:pkBeam 4.5s ease-in-out infinite}
+@keyframes pkBeam{50%{opacity:.78}}
+.pick .pool{position:absolute;left:50%;top:63%;width:86%;height:90px;transform:translate(-50%,-50%);background:radial-gradient(ellipse at center,rgba(120,120,255,.3),rgba(60,60,160,.08) 55%,transparent 72%);pointer-events:none}
+.pick .vig{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 46%,transparent 40%,rgba(0,0,0,.75));pointer-events:none}
+.pick canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pick .ttl{position:absolute;top:66px;left:0;right:0;text-align:center;pointer-events:none}
+.pick .ttl .k{font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.55);font-weight:600}
+.pick .ttl .n{font-size:24px;font-weight:600;margin-top:6px}
+.pick .ttl .s{font-size:12px;color:rgba(255,255,255,.5);margin-top:6px}
+.pick .hint{position:absolute;left:0;right:0;bottom:132px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.7);pointer-events:none;transition:opacity .4s}
+.pick .hint svg{animation:pkHand 1.8s ease-in-out infinite}
+@keyframes pkHand{0%,100%{transform:translateX(-8px)}50%{transform:translateX(8px)}}
+.pick .pk-go{position:absolute;left:24px;right:24px;bottom:46px;width:auto}
+.pick .pk-x{position:absolute;top:58px;left:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:20px;line-height:1;cursor:pointer}
+.pick.chosen .hint,.pick.chosen .pk-go,.pick.chosen .ttl,.pick.chosen .pk-x{opacity:0;transition:opacity .3s}
 .reveal{position:absolute;inset:0;z-index:30;background:#000;display:none;overflow:hidden;cursor:pointer}
 .reveal.on{display:block}
 .rv-on .views,.rv-on .top,.rv-on .nav,.rv-on .bg{visibility:hidden}
@@ -338,7 +362,7 @@ canvas.glowl{-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparen
  <div class="views" id="views">
   <!-- BOXES -->
   <section class="view on" id="v-boxes">
-   <div class="hero" id="hero"><div class="glow"></div><div class="floor"></div><div class="track" id="track"></div>
+   <div class="hero" id="hero"><div class="hspot"></div><div class="glow"></div><div class="floor"></div><div class="track" id="track"></div>
     <button class="arrow l" id="prev" aria-label="Previous box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
     <button class="arrow r" id="next" aria-label="Next box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button></div>
    <div class="dots" id="dots"></div>
@@ -420,6 +444,7 @@ canvas.glowl{-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparen
  <div class="scrim" id="scrim"></div>
  <div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div class="sh"><h3 id="shT"></h3><button class="x" id="shX" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div><div class="sb" id="shB"></div></div>
 
+ <div class="pick" id="pick" aria-live="polite"></div>
  <div class="reveal" id="reveal" aria-live="polite"></div>
  <div class="toast" id="toast"></div>
 </div></div>
@@ -755,7 +780,21 @@ function openBuy(bi){const b=BOXES[bi];
  openSheet('Open box',`<div class="shead"><div style="width:96px">${LBOX(b)}</div><div><div class="k">${b.tier.toUpperCase()} BOX</div><div style="font-size:18px;font-weight:600;margin-top:2px">${esc(b.skin)}</div><div class="v">${money(b.min)} – ${money(b.max)}</div></div></div>
  <div class="form"><div class="kv" style="margin:0">Price <b>${money(b.price)}</b></div><div class="kv" style="margin:0">Balance after <b>${money(S.bal-b.price)}</b></div><div class="kv" style="margin:0">Leaderboard points <b>+${(b.price*5).toLocaleString()}</b></div>
  <p class="note">You always receive an item. Keep it, ship it, or sell it back for 90% of fair market value.</p>
- <button class="cta sm" id="confirmBuy">OPEN FOR ${money(b.price)}</button></div>`,el=>el.querySelector('#confirmBuy').onclick=()=>{closeSheet();openBox(bi)})}
+ <button class="cta sm" id="confirmBuy">OPEN FOR ${money(b.price)}</button></div>`,el=>el.querySelector('#confirmBuy').onclick=()=>{closeSheet();setTimeout(()=>openPicker(bi),250)})}
+/* pick your box: a ring of identical boxes on a dark stage; drag to turn, the one under the spotlight is yours */
+function openPicker(bi){const b=BOXES[bi],pk=$('#pick');let chosen=false,api=null;
+ pk.className='pick';pk.innerHTML=`<div class="curt"></div><div class="beam"></div><div class="pool"></div><div class="vig"></div>
+  <div class="ttl"><div class="k">CHOOSE YOUR BOX</div><div class="n">${esc(b.skin)}</div><div class="s">Every box has the same odds. Trust your gut.</div></div>
+  <div class="hint"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V4.5a1.5 1.5 0 0 1 3 0v6"/><path d="M15 10.5V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5-2.7L3.6 14a1.6 1.6 0 0 1 2.6-1.8L9 15"/></svg><span>Drag to move</span></div>
+  <button class="cta pk-go">OPEN THIS BOX</button><button class="pk-x" aria-label="Back">×</button>`;
+ pk.classList.add('on');scr.classList.add('pk-on');requestAnimationFrame(()=>requestAnimationFrame(()=>pk.classList.add('vis')));SFX.sw();
+ const choose=()=>{if(chosen)return;chosen=true;pk.classList.add('chosen');SFX.charge();try{navigator.vibrate&&navigator.vibrate(20)}catch(e){}
+  if(api)api.pick();setTimeout(()=>{openBox(bi);setTimeout(closePicker,300)},api?700:150)};
+ pk.querySelector('.pk-go').onclick=e=>{e.stopPropagation();choose()};
+ pk.querySelector('.pk-x').onclick=e=>{e.stopPropagation();if(!chosen)closePicker()};
+ try{if(window.MB3D&&window.MB3D.picker)api=window.MB3D.picker(pk,b,{tick:()=>{SFX.tick(.9);try{navigator.vibrate&&navigator.vibrate(6)}catch(e){}},tap:choose,moved:()=>{const h=pk.querySelector('.hint');if(h)h.style.opacity=0}})}catch(e){console.warn('3D picker off',e)}
+ if(!api)choose()}
+function closePicker(){const pk=$('#pick');pk.classList.remove('vis');scr.classList.remove('pk-on');setTimeout(()=>{if(!pk.classList.contains('vis')){pk.classList.remove('on');pk.innerHTML=''}},460)}
 $('#buy').onclick=()=>openBuy(cur);
 $('#lbOpen').onclick=()=>{show('boxes');openBuy(cur)};
 
@@ -1056,7 +1095,10 @@ const pm = new THREE.PMREMGenerator(R);
   const card = (w, h, x, y, z, i) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({color: new THREE.Color(i, i, i), side: THREE.DoubleSide})); m.position.set(x, y, z); m.lookAt(0, .5, 0); env.add(m) };
   card(6, 3, -5, 6, 4, 3.2); card(1.2, 7, 6, 2.5, -3, 2.4); card(1.2, 7, -6.5, 2, -1, 1.6); card(5, 1, 0, 1.2, 7, 1.0); card(8, 8, 0, 9, 0, .35);
   S.environment = pm.fromScene(env, 0).texture; }
-const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(-3, 5, 3); S.add(key);
+const key = new THREE.DirectionalLight(0xffffff, .95); key.position.set(-3, 5, 3); S.add(key);
+// stage spotlight from above: a soft violet-white hotspot on the lid and the front face
+const mkSpot = (y, z, i) => { const sp = new THREE.SpotLight(0xcfcaff, i, 14, .5, .85, 1.4); sp.position.set(0, y, z); sp.target.position.set(0, .5, 0); return sp };
+const spot = mkSpot(5.4, 2.6, 34); S.add(spot, spot.target);
 const rim = new THREE.DirectionalLight(0xbfdfff, 1.6); rim.position.set(3.5, 2, -3.5); S.add(rim);
 const fill = new THREE.DirectionalLight(0xffffff, .5); fill.position.set(2, 1, 4); S.add(fill);
 const cam = new THREE.PerspectiveCamera(24, 1, .1, 50);
@@ -1156,7 +1198,7 @@ async function sync(){ const n = cur; if(n === shown) return; shown = n; const k
   BOXES.forEach(b => load(keyOf(b))); }   // warm the rest in the background
 const clock = new THREE.Clock();
 function frame(){ requestAnimationFrame(frame);
-  const visible = typeof curView === 'undefined' || (curView === 'boxes' && !document.querySelector('.rv-on') && !document.hidden);
+  const visible = typeof curView === 'undefined' || (curView === 'boxes' && !document.querySelector('.rv-on,.pk-on') && !document.hidden);
   if(!visible) { clock.getDelta(); return; }
   if(typeof cur !== 'undefined' && cur !== shown) sync();
   const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
@@ -1198,7 +1240,7 @@ window.MB3D.reveal = function(boxEl, b){
     R2.setPixelRatio(Math.min(devicePixelRatio, lowPower ? 1.5 : 2)); R2.setClearColor(0, 0);
     R2.toneMapping = THREE.ACESFilmicToneMapping; R2.toneMappingExposure = 1.2; R2.outputColorSpace = THREE.SRGBColorSpace;
     const S2 = new THREE.Scene(); S2.environment = S.environment;
-    S2.add(key.clone(), rim.clone(), fill.clone());
+    S2.add(key.clone(), rim.clone(), fill.clone()); { const sp2 = mkSpot(5.4, 2.6, 30); S2.add(sp2, sp2.target) }
     const holder = src.clone(true); holder.position.z += BL.zfix;
     const leds = [];
     holder.traverse(o => { if(o.isMesh && o.material.emissive && o.material.emissiveIntensity > 1){ o.material = o.material.clone(); leds.push(o.material) } });
@@ -1233,6 +1275,58 @@ window.MB3D.reveal = function(boxEl, b){
     };
     requestAnimationFrame(step);
   }).catch(err => console.warn('3D reveal off:', err));
+};
+// ---- pick-your-box carousel: N clones on a ring, a spotlight on the front slot, drag to turn, snaps to a box ----
+window.MB3D.picker = function(pk, b, cb){
+  const N = 8, RAD = 2.45, STEP = Math.PI * 2 / N, k = keyOf(b);
+  const cv3 = document.createElement('canvas'); pk.insertBefore(cv3, pk.querySelector('.vig'));
+  const R3 = new THREE.WebGLRenderer({canvas: cv3, antialias: true, alpha: true});
+  R3.setPixelRatio(Math.min(devicePixelRatio, lowPower ? 1.5 : 2)); R3.setClearColor(0, 0);
+  R3.toneMapping = THREE.ACESFilmicToneMapping; R3.toneMappingExposure = 1.25; R3.outputColorSpace = THREE.SRGBColorSpace;
+  const S3 = new THREE.Scene(); S3.environment = S.environment; S3.environmentIntensity = .28;
+  S3.add(new THREE.HemisphereLight(0x5a62ff, 0x040308, .45));
+  const sp = new THREE.SpotLight(0xc9c4ff, 34, 16, .3, .75, 1.3); sp.position.set(0, 4.4, RAD + 3.6); sp.target.position.set(0, .55, RAD); S3.add(sp, sp.target);
+  const back = new THREE.DirectionalLight(0x6c72ff, 1.1); back.position.set(0, 3, -4); S3.add(back);
+  const ring = new THREE.Group(); S3.add(ring);
+  const C3 = new THREE.PerspectiveCamera(38, 1, .1, 80);
+  const gl3 = glowLayer(cv3);
+  const fit = () => { const w = cv3.clientWidth, h = cv3.clientHeight; if(!w || !h) return; R3.setSize(w, h, false); gl3.size(w, h); C3.aspect = w / h;
+    const d = Math.max(6, 1.55 / (Math.tan(19 * Math.PI / 180) * C3.aspect)); C3.position.set(0, .62 + d * .2, RAD + d); C3.lookAt(0, .62, RAD); C3.updateProjectionMatrix() };
+  fit(); addEventListener('resize', fit);
+  const slots = [];
+  load(k).then(src => { if(!cv3.isConnected) return;
+    for(let i = 0; i < N; i++){ const piv = new THREE.Group(); piv.rotation.y = i * STEP; const h = src.clone(true); h.position.z = RAD; piv.add(h); ring.add(piv); slots.push(h) } });
+  // spin in from the side, then the user drives
+  let rot = -STEP * 3.5, target = 0, vel = 0, drag = false, lx = 0, sx = 0, sy = 0, moved = 0, lastIdx = null, pickAt = 0, lastT = 0;
+  const idxOf = r => ((Math.round(-r / STEP) % N) + N) % N;
+  const down = e => { if(e.target.closest('button') || pickAt) return; drag = true; lx = sx = e.clientX; sy = e.clientY; moved = 0; vel = 0; lastT = performance.now(); try{ pk.setPointerCapture(e.pointerId) }catch(_){} };
+  const move = e => { if(!drag) return; const dx = e.clientX - lx, now = performance.now(); lx = e.clientX; moved = Math.max(moved, Math.abs(e.clientX - sx));
+    const dr = dx * .0065; rot += dr; target = rot; vel = dr / Math.max(1, now - lastT) * 16; lastT = now; if(moved > 8 && cb.moved) cb.moved() };
+  const up = e => { if(!drag) return; drag = false;
+    if(moved < 8 && Math.abs(e.clientY - sy) < 10){ const r = pk.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+      if(fx > .25 && fx < .75 && fy > .3 && fy < .72){ cb.tap && cb.tap(); return } }
+    target = Math.round((rot + vel * 9) / STEP) * STEP };
+  pk.addEventListener('pointerdown', down); pk.addEventListener('pointermove', move); pk.addEventListener('pointerup', up); pk.addEventListener('pointercancel', up);
+  const clk = new THREE.Clock();
+  const step = () => {
+    if(!cv3.isConnected){ removeEventListener('resize', fit); gl3.dispose(); R3.dispose(); R3.forceContextLoss(); return }
+    requestAnimationFrame(step);
+    const dt = Math.min(clk.getDelta(), .05), t = clk.elapsedTime;
+    if(!drag) rot += (target - rot) * Math.min(1, dt * 7.5);
+    ring.rotation.y = rot;
+    const fi = idxOf(rot); if(lastIdx !== null && fi !== lastIdx && cb.tick) cb.tick(); lastIdx = fi;
+    slots.forEach((h, i) => { const a = i * STEP + rot, f = Math.max(0, Math.cos(a));            // f: 1 at the front slot
+      const sel = i === fi && !drag && Math.abs(target - rot) < .02;
+      h.userData.l = (h.userData.l || 0) + ((sel ? 1 : 0) - (h.userData.l || 0)) * Math.min(1, dt * 6);
+      const L = h.userData.l, pe = pickAt ? Math.min(1, (performance.now() - pickAt) / 650) : 0, pz = i === fi ? pe * pe * 1.6 : 0;
+      h.position.set(0, .07 * L * Math.sin(t * 2.2) + .12 * L + pz * .3, RAD + .25 * L + pz);
+      h.rotation.y = (i === fi ? -.05 * Math.sin(t * .9) * L : 0);
+      h.visible = !(pickAt && i !== fi && pe > .9) });
+    if(pickAt){ const pe = Math.min(1, (performance.now() - pickAt) / 650); sp.intensity = 34 + 50 * pe }
+    R3.render(S3, C3); gl3.render(S3, C3, .5) };
+  requestAnimationFrame(step);
+  setTimeout(() => { if(!drag) target = 0 }, 60);
+  return { pick(){ target = Math.round(rot / STEP) * STEP; rot = target; pickAt = performance.now() } };
 };
 const first = load(keyOf(BOXES[typeof cur !== 'undefined' ? cur : 0])).then(() => { hero.classList.add('has3d'); size(); });
 first.catch(err => { console.warn('3D hero off:', err); cv.remove(); });
