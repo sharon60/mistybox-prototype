@@ -531,8 +531,8 @@ c|Swatch|Mission To Saturn|385|swatch-mission-to-saturn
 c|Christian Van Sant|Grand Python (Black)|383|christian-van-sant-grand-python-black
 c|Timex|Peanuts x Marlin Americana|359|timex-peanuts-x-timex-marlin-automatic-americana`},
 ];
-// Holiday special: same contents and odds as the $250 Masterpiece box, in the limited Santa skin
-(()=>{const r=BOXES.find(b=>b.key==='ruby');BOXES.push({...r,tier:'Holiday Special',key:'santa',skin:"Santa's Sleigh",img:'assets/3d/santa-box.webp',led:'assets/3d/santa-led.png',w:240,
+// Holiday special (shown first): same contents and odds as the $250 Masterpiece box, in the limited Santa skin
+(()=>{const r=BOXES.find(b=>b.key==='ruby');BOXES.unshift({...r,tier:'Holiday Special',key:'santa',skin:"Santa's Sleigh",img:'assets/3d/santa-box.webp',led:'assets/3d/santa-led.png',w:240,
  w1:'#e0202e',w2:'#d4a24a',accent:'#e8b04a',glow:'rgba(230,40,50,.55)',c1:'#ffe3a8',c2:'#e8b04a',c3:'#b8862a',ctat:'#3a0608',cglow:'rgba(232,176,74,.5)'})})();
 BOXES.forEach((b,bi)=>{b.items=b.items.trim().split('\n').map(l=>{const[t,br,md,p,s]=l.split('|');return{tier:T1[t],brand:br,model:md,price:+p,img:'assets/watches/'+s+'.webp',id:s,box:bi}})});
 const ALL=(()=>{const m=new Map();BOXES.forEach(b=>b.items.forEach(i=>{if(!m.has(i.id))m.set(i.id,i)}));return[...m.values()].sort((a,b)=>b.price-a.price)})();
